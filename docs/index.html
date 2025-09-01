@@ -4,7 +4,7 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="theme-color" content="#111827"/>
-  <title>Tintagel Terminology Challenge — No-Dependencies (Prompt+Audio)</title>
+  <title>Tintagel Terminology Challenge — No-Dependencies (Audio status + big description)</title>
   <style>
     :root { --bg:#f5f5f5; --text:#111827; --muted:#6b7280; --card:#ffffff; --border:#d1d5db;
             --ok:#34d399; --warn:#f59e0b; --bad:#ef4444; --dark:#111827; }
@@ -21,11 +21,24 @@
     .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
     .stat-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
     .stat-value{margin-top:4px;font-size:20px;font-weight:600}
-    .toggle,.btn-lite{padding:8px 12px;border-radius:16px;border:1px solid var(--border);background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05);font-size:14px;cursor:pointer}
+
+    .toggle,.btn-lite{padding:8px 12px;border-radius:16px;border:1px solid var(--border);background:#fff;
+      box-shadow:0 2px 8px rgba(0,0,0,.05);font-size:14px;cursor:pointer}
     .toggle.on{background:#ecfdf5;border-color:#6ee7b7}
-    .qcard h2{margin:0;font-size:22px;font-weight:800;letter-spacing:-.01em}
+
+    /* Question sizing: small label, BIG description */
+    .prompt-label{margin:0;color:var(--muted);font-size:14px;font-weight:700;letter-spacing:.02em}
+    .question-text{margin:8px 0 0 0;color:#111827;font-size:22px;line-height:1.4;font-weight:700}
+
     .timer{width:100%;height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden}
     .timer>div{height:100%}
+    .timer.pulse{animation:pulse 1s infinite}
+    @keyframes pulse{
+      0%{box-shadow:0 0 0 0 rgba(239,68,68,.35)}
+      70%{box-shadow:0 0 0 10px rgba(239,68,68,0)}
+      100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}
+    }
+
     .grid2{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
     @media(min-width:768px){.grid2{grid-template-columns:1fr 1fr}}
     .btn{width:100%;text-align:left;padding:14px;border-radius:16px;border:1px solid var(--border);background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer}
@@ -42,6 +55,14 @@
     footer{margin:40px 0 24px;text-align:center;color:var(--muted);font-size:12px}
     .bar{display:flex;gap:8px;flex-wrap:wrap}
     .cat{color:var(--muted);font-size:13px;margin-bottom:8px}
+
+    /* Audio status pill */
+    .status{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:14px;border:1px solid}
+    .st-run{background:#ecfdf5;border-color:#6ee7b7;color:#065f46}
+    .st-sus{background:#fff7ed;border-color:#fbbf24;color:#92400e}
+    .st-mut{background:#fee2e2;border-color:#f87171;color:#7f1d1d}
+    .st-off{background:#e5e7eb;border-color:#9ca3af;color:#374151}
+    .dot{width:8px;height:8px;border-radius:999px;background:currentColor}
   </style>
 </head>
 <body>
@@ -49,12 +70,13 @@
     <header>
       <div>
         <h1 class="title">Tintagel Terminology Challenge</h1>
-        <div class="sub">Keyboard: [1–4]=answer • [Space]=next • [T]=toggle language • [M]=mute • [R]=restart</div>
+        <div class="sub">Keyboard: [1–4]=answer • [Space]=next • [T]=language • [M]=mute • [R]=restart</div>
       </div>
       <div class="bar">
         <button id="langBtn" class="toggle">日本語 / EN</button>
         <button id="muteBtn" class="toggle">Sound</button>
-        <button id="testBtn" class="btn-lite">Test</button>
+        <button id="testBtn" class="btn-lite">Test Sound</button>
+        <span id="audioStatus" class="status st-off"><span class="dot"></span><span>Audio: Off</span></span>
         <button id="restartBtn" class="btn-lite">Restart</button>
       </div>
     </header>
@@ -67,7 +89,7 @@
   </div>
 
   <script>
-    // ---------- Katakana map (aligned to your study guide; edit as preferred) ----------
+    // ---------- Katakana (edit to your school preference) ----------
     const KATA = {
       "Vor":"フォーア","Indes":"インデス","Nach":"ナハ",
       "Fühlen":"フューレン","Stark":"シュタルク","Schwach":"シュヴァッハ",
@@ -152,30 +174,41 @@
     function makeChoices(q,pool){ const others=pool.filter(x=>x.term!==q.term); const picks=shuffle(others).slice(0,3).map(x=>x.term); return shuffle([q.term,...picks]); }
     function labelFor(term){ return (lang==="ja") ? `${term} ／ ${KATA[term]||term}` : term; }
 
-    // ---------- Sound (WebAudio) ----------
+    // ---------- Sound (WebAudio with status + robust resume) ----------
     let audioCtx=null;
+    const audioStatusEl = document.getElementById("audioStatus");
+    function updateAudioStatus(){
+      let cls="status ", txt="";
+      if(muted){ cls+="st-mut"; txt="Audio: Muted"; }
+      else if(!audioCtx){ cls+="st-off"; txt="Audio: Off"; }
+      else if(audioCtx.state==="running"){ cls+="st-run"; txt="Audio: Running"; }
+      else { cls+="st-sus"; txt="Audio: Suspended"; }
+      audioStatusEl.className = cls; audioStatusEl.lastElementChild.textContent = txt;
+    }
     function enableAudio(){
       if(!audioCtx){
         const Ctx = window.AudioContext||window.webkitAudioContext;
         if(Ctx) audioCtx = new Ctx();
+        if(audioCtx){ audioCtx.onstatechange = updateAudioStatus; }
       }
-      if(audioCtx && audioCtx.state==="suspended"){ audioCtx.resume(); }
+      if(audioCtx && audioCtx.state==="suspended"){ audioCtx.resume().catch(()=>{}); }
+      updateAudioStatus();
     }
     function beep(freq, dur){
-      if(muted) return;
+      if(muted) { updateAudioStatus(); return; }
       enableAudio();
-      if(!audioCtx) return;
-      if(audioCtx.state!=="running"){ try{ audioCtx.resume(); }catch(e){} }
+      if(!audioCtx){ updateAudioStatus(); return; }
+      try{ if(audioCtx.state!=="running"){ audioCtx.resume().catch(()=>{}); } }catch(e){}
       const o=audioCtx.createOscillator();
       const g=audioCtx.createGain();
       o.type="square"; o.frequency.value=freq;
       const now = audioCtx.currentTime;
-      // slightly louder & longer so mobile hears it
       g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.08, now+0.01);
+      g.gain.linearRampToValueAtTime(0.12, now+0.01); // louder
       g.gain.linearRampToValueAtTime(0.0, now+dur);
       o.connect(g); g.connect(audioCtx.destination);
       o.start(now); o.stop(now+dur);
+      updateAudioStatus();
     }
     // user gesture → unlock audio
     window.addEventListener("pointerdown", enableAudio, { once:false });
@@ -190,8 +223,8 @@
     const footText = document.getElementById("footText");
 
     langBtn.onclick=()=>{ lang=(lang==="en"?"ja":"en"); localStorage.setItem("ttc.lang",lang); renderTopBar(); render(); };
-    muteBtn.onclick=()=>{ muted=!muted; localStorage.setItem("ttc.muted",muted?"1":"0"); renderTopBar(); };
-    testBtn.onclick=()=>{ enableAudio(); beep(660,0.12); };
+    muteBtn.onclick=()=>{ muted=!muted; localStorage.setItem("ttc.muted",muted?"1":"0"); renderTopBar(); updateAudioStatus(); };
+    testBtn.onclick=()=>{ enableAudio(); beep(700,0.15); };
     restartBtn.onclick=()=>restart();
 
     function renderTopBar(){
@@ -201,6 +234,7 @@
       footText.textContent = (lang==="ja"
         ? "学習モード：短い問題、即時フィードバック、進捗の可視化。誤答は自動的に復習対象になります。"
         : "Learning mode: short questions, instant feedback, progress visualization. Missed items are automatically queued for review.");
+      updateAudioStatus();
     }
 
     function render(){
@@ -236,18 +270,23 @@
 
       const q = shuffled[idx];
       const pct = Math.max(0, Math.min(100, Math.round((timeLeft/DURATION_MS)*100)));
+      const pulseClass = timeLeft<=5000 ? "pulse" : "";
 
       main.innerHTML = `
         ${stats}
         <div class="card qcard">
           <div class="cat">${lang==="ja"?q.categoryJa:q.category}</div>
-          <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap">
-            <h2>${lang==="ja" ? "この説明に当てはまる用語は？" : "Which term matches this description?"}</h2>
-            <div class="timer" aria-label="timer">
-              <div style="width:${pct}%; background:${pct>40?'var(--ok)': pct>20?'var(--warn)':'var(--bad)'}"></div>
-            </div>
+
+          <!-- SMALL label -->
+          <div class="prompt-label">${lang==="ja" ? "この説明に当てはまる用語は？" : "Which term matches this description?"}</div>
+
+          <!-- BIG description -->
+          <div class="question-text">${lang==="ja"?q.ja:q.en}</div>
+
+          <div class="timer ${pulseClass}" aria-label="timer">
+            <div style="width:${pct}%; background:${pct>40?'var(--ok)': pct>20?'var(--warn)':'var(--bad)'}"></div>
           </div>
-          <p style="margin-top:12px; color:#374151; font-size:16px">${lang==="ja"?q.ja:q.en}</p>
+
           <div class="grid2" id="opts"></div>
           <div class="row2">
             <span id="feedback">${answered ? feedbackText(q) : (lang==="ja"?"1〜4で選択":"Choose with 1–4")}</span>
@@ -295,11 +334,11 @@
       stopTimer(); timeLeft=DURATION_MS; stressAcc=0;
       timerId=setInterval(()=>{
         timeLeft=Math.max(0,timeLeft-TICK_MS);
-        if(!answered){ // stress beeps only while question is live
+        if(!answered){ // stress beeps only while live
           stressAcc += TICK_MS;
-          if(timeLeft<=2000 && stressAcc>=250){ beep(1000,0.09); stressAcc=0; }
-          else if(timeLeft<=5000 && stressAcc>=500){ beep(820,0.08); stressAcc=0; }
-          else if(timeLeft<=10000 && stressAcc>=1000){ beep(620,0.07); stressAcc=0; }
+          if(timeLeft<=2000 && stressAcc>=250){ beep(1000,0.12); stressAcc=0; }
+          else if(timeLeft<=5000 && stressAcc>=500){ beep(820,0.10); stressAcc=0; }
+          else if(timeLeft<=10000 && stressAcc>=1000){ beep(620,0.10); stressAcc=0; }
         }
         if(timeLeft===0 && !answered) handleAnswer("__timeout__");
         render();
@@ -318,7 +357,7 @@
       const q=shuffled[idx];
       const correct=(choice===q.term);
       const timeMs=Math.max(1,DURATION_MS-timeLeft);
-      if(choice==="__timeout__"){ beep(200,0.12); } else { correct ? beep(480,0.12) : beep(240,0.14); }
+      if(choice==="__timeout__"){ beep(220,0.18); } else { correct ? beep(520,0.16) : beep(260,0.18); }
       const speedScore=Math.ceil((DURATION_MS-timeMs)/250);
       const delta = correct ? 10 + speedScore + (streak*2) : 0;
       answered={correct,choice,timeMs}; score+=delta; streak=correct?(streak+1):0;
@@ -332,16 +371,16 @@
     }
     function nextQuestion(){
       if(idx+1>=shuffled.length || lives===0){ restart(); return; }
-      answered=null; idx++; startMs=Date.now(); beep(720,0.10); beginQuestion();
+      answered=null; idx++; startMs=Date.now(); beep(740,0.12); beginQuestion();
     }
     function restart(){
-      answered=null; shuffled=shuffle([...DATA]); idx=0; lives=3; score=0; streak=0; startMs=Date.now(); beep(720,0.10); beginQuestion();
+      answered=null; shuffled=shuffle([...DATA]); idx=0; lives=3; score=0; streak=0; startMs=Date.now(); beep(740,0.12); beginQuestion();
     }
 
     // ---------- Keyboard ----------
     window.addEventListener("keydown",(e)=>{
       if(e.key==="t"||e.key==="T"){ lang=(lang==="en"?"ja":"en"); localStorage.setItem("ttc.lang",lang); renderTopBar(); render(); }
-      if(e.key==="m"||e.key==="M"){ muted=!muted; localStorage.setItem("ttc.muted",muted?"1":"0"); renderTopBar(); }
+      if(e.key==="m"||e.key==="M"){ muted=!muted; localStorage.setItem("ttc.muted",muted?"1":"0"); renderTopBar(); updateAudioStatus(); }
       if(e.key==="r"||e.key==="R"){ restart(); }
       if(e.key===" " && answered){ nextQuestion(); }
       if(!answered && ["1","2","3","4"].includes(e.key)){ const i=parseInt(e.key,10)-1; handleAnswer(currentOptions[i]); }
