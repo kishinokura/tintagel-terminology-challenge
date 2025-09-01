@@ -8,4 +8,5 @@ export default defineConfig({
   plugins: [react()],
   base: '/tintagel-terminology-challenge/'
 
+
 })
