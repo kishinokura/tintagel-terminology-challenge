@@ -3,11 +3,66 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#111827">
-    <title>Tintagel Terminology Challenge</title>
+    <meta name="theme-color" content="#111827" />
+    <title>Tintagel Terminology Challenge (No-Build)</title>
+    <!-- Tailwind CSS from CDN (no build step required) -->
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-neutral-100">
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+
+    <!-- One-file app using Preact + HTM (ES modules via CDN). No Vite, no Actions. -->
+    <script type="module">
+      import { h, render } from "https://esm.sh/preact@10.24.1";
+      import { useEffect, useMemo, useRef, useState } from "https://esm.sh/preact@10.24.1/hooks";
+      import htm from "https://esm.sh/htm@3.1.1";
+      const html = htm.bind(h);
+
+      // ---------- Helpers ----------
+      function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+      function useSound(freq, dur) {
+        const ctxRef = useRef(null);
+        useEffect(() => {
+          if (typeof window !== "undefined" && !ctxRef.current) {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (Ctx) ctxRef.current = new Ctx();
+          }
+        }, []);
+        return () => {
+          const ctx = ctxRef.current;
+          if (!ctx) return;
+          const o = ctx.createOscillator();
+          const g = ctx.createGain();
+          o.type = "square";
+          o.frequency.value = freq;
+          g.gain.value = 0.04;
+          o.connect(g);
+          g.connect(ctx.destination);
+          o.start();
+          o.stop(ctx.currentTime + dur);
+        };
+      }
+
+      const CATEGORY_JA = {
+        "Timing & Initiative": "タイミングと主導権",
+        "Awareness & Leverage": "感覚とテコの原理",
+        "Targets & Measure": "的と間合い・計測",
+        "Phases": "戦闘の段階",
+        "Vier Leger": "四つの構え",
+        "Meisterhäue": "名手の斬撃",
+        "Tactics": "戦術と基礎技術",
+      };
+      const t = (term, en, ja, category) => ({ term, en, ja, category, categoryJa: CATEGORY_JA[category] || category });
+
+      const DATA = [
+        // Timing & Initiative
+        t('Vor','Taking the initiative so the foe must react.','先手を取り主導権を握る。相手を反応に追い込む。','Timing & Initiative'),
+        t('Indes','Acting in-the-instant; keep/regain initiative in the bind.','瞬間に行動し、バインド中の主導権を保つ/取り返す。','Timing & Initiative'),
+        t('Nach','Acting after; being in a reactive role.','相手の後で動く反応
