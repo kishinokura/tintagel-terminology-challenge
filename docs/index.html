@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#111827"/>
+  <title>Tintagel Terminology Challenge — Flat UI (Reset + Audio status)</title>
+  <style>
+    :root { --bg:#f5f5f5; --text:#111827; --muted:#6b7280; --border:#d1d5db;
+            --ok:#34d399; --warn:#f59e0b; --bad:#ef4444; --dark:#111827; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",sans-serif;background:var(--bg);color:var(--text)}
+    .container{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+    header,main,footer{width:100%;max-width:960px}
+    header{display:flex;gap:12px;flex-direction:column;margin-top:16px}
+    @media(min-width:768px){header{flex-direction:row;align-items:flex-end;justify-content:space-between}}
+    h1{margin:0;font-weight:800;letter-spacing:-.01em}
+    .sub{color:var(--muted);font-size:12px}
+
+    /* FLAT layout (no cards) */
+    .row{display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0}
+    @media(min-width:768px){.row{grid-template-columns:repeat(4,1fr)}}
+    .stat{padding:8px;border:1px dashed var(--border);border-radius:12px;background:transparent}
+    .stat-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+    .stat-value{margin-top:4px;font-size:20px;font-weight:600}
+
+    .toggle,.btn-lite{padding:8px 12px;border-radius:16px;border:1px solid var(--border);background:#fff;
+      font-size:14px;cursor:pointer}
+    .toggle.on{background:#ecfdf5;border-color:#6ee7b7}
+
+    /* Question sizing: small label, BIG description */
+    .prompt-label{margin:0;color:var(--muted);font-size:14px;font-weight:700;letter-spacing:.02em}
+    .question-text{margin:8px 0 0 0;color:#111827;font-size:22px;line-height:1.4;font-weight:700}
+
+    .timer{width:100%;height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin:10px 0}
+    .timer>div{height:100%}
+    .timer.pulse{animation:pulse 1s infinite}
+    @keyframes pulse{
+      0%{box-shadow:0 0 0 0 rgba(239,68,68,.35)}
+      70%{box-shadow:0 0 0 10px rgba(239,68,68,0)}
+      100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}
+    }
+
+    .grid2{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
+    @media(min-width:768px){.grid2{grid-template-columns:1fr 1fr}}
+    .btn{width:100%;text-align:left;padding:14px;border-radius:10px;border:2px solid #111827;background:#fff;cursor:pointer}
+    .btn:hover{background:#fafafa}
+    .btn.bad{border-color:#fb7185;background:#fff1f2}
+    .btn.good{border-color:#6ee7b7;background:#ecfeff}
+    .btn.dim{opacity:.6}
+    .pill{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:var(--dark);color:#fff;font-size:12px;font-weight:700}
+    .row2{display:flex;align-items:center;justify-content:space-between;margin-top:12px;color:var(--muted);font-size:14px}
+    .next{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#fff;cursor:pointer}
+    .progress{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden;margin-top:6px}
+    .progress>div{height:100%;background:#111827}
+    footer{margin:28px 0 20px;text-align:center;color:var(--muted);font-size:12px}
+    .bar{display:flex;gap:8px;flex-wrap:wrap}
+    .cat{color:var(--muted);font-size:13px;margin-bottom:4px}
+
+    /* Audio status pill */
+    .status{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:14px;border:1px solid}
+    .st-run{background:#ecfdf5;border-color:#6ee7b7;color:#065f46}
+    .st-sus{background:#fff7ed;border-color:#fbbf24;color:#92400e}
+    .st-mut{background:#fee2e2;border-color:#f87171;color:#7f1d1d}
+    .st-off{background:#e5e7eb;border-color:#9ca3af;color:#374151}
+    .dot{width:8px;height:8px;border-radius:999px;background:currentColor}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1 class="title">Tintagel Terminology Challenge</h1>
+        <div class="sub">Keyboard: [1–4]=answer • [Space]=next • [T]=language • [M]=mute • [R]=restart</div>
+      </div>
+      <div class="bar">
+        <button id="langBtn" class="toggle">日本語 / EN</button>
+        <button id="muteBtn" class="toggle">Sound</button>
+        <button id="testBtn" class="btn-lite">Test Sound</button>
+        <span id="audioStatus" class="status st-off"><span class="dot"></span><span>Audio: Off</span></span>
+        <button id="restartBtn" class="btn-lite">Restart</button>
+        <button id="clearBtn" class="btn-lite">Reset Progress</button>
+      </div>
+    </header>
+
+    <main id="main"></main>
+
+    <footer>
+      <p id="footText">Learning mode: short questions, instant feedback, progress visualization. Missed items are automatically queued for review.</p>
+    </footer>
+  </div>
+
+  <script>
+    // ---------- Katakana ----------
+    const KATA = {
+      "Vor":"フォーア","Indes":"インデス","Nach":"ナハ",
+      "Fühlen":"フューレン","Stark":"シュタルク","Schwach":"シュヴァッハ",
+      "Vier Blößen":"フィーア・ブレーセン","Länge":"レンゲ","Maße":"メーゼ",
+      "Zufechten":"ツーフェヒテン","Krieg":"クリーク","Abzug":"アプツーク",
+      "Vom Tag":"フォムターク","Ochs":"オックス","Pflug":"フルーク","Alber":"アルバー",
+      "Zornhau":"ゾルンハウ","Krumphau":"クルンプハウ","Zwerchhau":"ツヴェルクハウ",
+      "Schielhau":"シールハウ","Scheitelhau":"シャイテルハウ",
+      "Abschneiden":"アプシュナイデン","Absetzen":"アプゼッツェン",
+      "Durchlaufen":"ドゥルヒラウフェン","Durchwechseln":"ドゥルヒヴェクセルン",
+      "Hände Drücken":"ヘンデドリュッケン","Hängen":"ヘンゲン",
+      "Nachreisen":"ナハライゼン","Schnappen":"シュナッペン","Überlaufen":"ユーバーラウフェン",
+      "Versetzen":"フェアゼッツェン","Winden":"ヴィンデン","Zucken":"ツッケン",
+    };
+
+    // ---------- Data ----------
+    const CATEGORY_JA = {
+      "Timing & Initiative":"タイミングと主導権","Awareness & Leverage":"感覚とテコの原理",
+      "Targets & Measure":"的と間合い・計測","Phases":"戦闘の段階",
+      "Vier Leger":"四つの構え","Meisterhäue":"名手の斬撃","Tactics":"戦術と基礎技術",
+    };
+    const t=(term,en,ja,category)=>({term,en,ja,category,categoryJa:CATEGORY_JA[category]||category});
+    const DATA = [
+      t("Vor","Taking the initiative so the foe must react.","先手を取り主導権を握る。相手を反応に追い込む。","Timing & Initiative"),
+      t("Indes","Acting in-the-instant; keep/regain initiative in the bind.","瞬間に行動し、バインド中の主導権を保つ/取り返す。","Timing & Initiative"),
+      t("Nach","Acting after; being in a reactive role.","相手の後で動く反応的な立場。","Timing & Initiative"),
+      t("Fühlen","Awareness in the fight (pressure, distance, stance, balance, grip, breath).","戦いの全体状況の感覚（剣圧・距離・姿勢・重心・握り・呼吸）。","Awareness & Leverage"),
+      t("Stark","Strong bind: contact nearer your hilt.","強いバインド：接触点が柄に近い。","Awareness & Leverage"),
+      t("Schwach","Weak bind: contact nearer your point.","弱いバインド：接触点が剣先に近い。","Awareness & Leverage"),
+      t("Vier Blößen","The four openings.","四つの開口部。","Targets & Measure"),
+      t("Länge","Distance / reach.","間合い・リーチ。","Targets & Measure"),
+      t("Maße","Proper measure / proportion (time & space).","正しい計測（間と時）。","Targets & Measure"),
+      t("Zufechten","Onset: closing in & first attack.","攻撃開始の接近段階と最初の攻撃。","Phases"),
+      t("Krieg","War: middle phase where blades bind & techniques flow.","主戦局面：バインド内で技が競り合う段階。","Phases"),
+      t("Abzug","Withdrawal: safe exit & disengage.","離脱：攻防後に安全に下がる。","Phases"),
+      t("Vom Tag","High roof guard; strike down.","上段構え。斬り下ろす。","Vier Leger"),
+      t("Ochs","High thrusting guard with point forward.","高い突き構え（剣先を相手へ）。","Vier Leger"),
+      t("Pflug","Low thrusting guard with point forward.","低い突き構え（剣先を相手へ）。","Vier Leger"),
+      t("Alber","Low 'fool' guard; invitation.","低い誘いの構え。","Vier Leger"),
+      t("Zornhau","Wrath-cut: break basic strikes while threatening to hit or thrust.","怒りの斬り：相手の基本打を破りつつ打突を脅かす。","Meisterhäue"),
+      t("Krumphau","Crooked-cut; breaks Ochs.","曲線の斬り。オックスを破る。","Meisterhäue"),
+      t("Zwerchhau","Thwart-cut; breaks Vom Tag.","横の斬り。フォムタークを破る。","Meisterhäue"),
+      t("Schielhau","Squinting-cut; breaks Pflug.","目くらましの斬り。フルークを破る。","Meisterhäue"),
+      t("Scheitelhau","Parting-cut downward on the crown; breaks Alber.","頭頂へ割り込む斬り。","Meisterhäue"),
+      t("Abschneiden","Slicing off at the hands/arms.","手や腕を切り落とす。","Tactics"),
+      t("Absetzen","Setting-aside thrust.","攻撃を逸らしながら突く。","Tactics"),
+      t("Durchlaufen","Running through; body displacement.","駆け抜ける（体さばき）。","Tactics"),
+      t("Durchwechseln","Change-through under the blade.","剣線下の切り替え。","Tactics"),
+      t("Hände Drücken","Pressing the hands in close play.","至近距離で相手の手を押し込む。","Tactics"),
+      t("Hängen","Hanging guard/hold.","吊り構え。","Tactics"),
+      t("Nachreisen","Travel-after pursuing strike.","追い討ち・追撃。","Tactics"),
+      t("Schnappen","Snapping: return attack using opponent's power.","相手の力を利用して返す打ち。","Tactics"),
+      t("Überlaufen","Over-running above the blade to out-reach.","上から制圧して射程を超える。","Tactics"),
+      t("Versetzen","Displacing: shift the blade off-line.","剣線をずらす。","Tactics"),
+      t("Winden","Eight windings into Ochs/Pflug; leverage in the bind.","8種の巻き（高位オックス4・低位フルーク4）。","Tactics"),
+      t("Zucken","Twitching; sudden pull-snap.","引き抜き。素早いスナップ。","Tactics"),
+    ];
+
+    // ---------- State ----------
+    const url = new URL(location.href);
+    const urlLang = url.searchParams.get("lang");
+    const urlFresh = url.searchParams.get("fresh");
+
+    // If ?fresh=1 → wipe old progress so you don't start at 9 seen/review
+    if (urlFresh === "1") {
+      try {
+        localStorage.removeItem("ttc.progress");
+        localStorage.removeItem("ttc.bestStreak");
+      } catch {}
+    }
+
+    let lang = (urlLang==="ja"||urlLang==="en") ? urlLang : (localStorage.getItem("ttc.lang")||"en");
+    let muted = localStorage.getItem("ttc.muted")==="1";
+    let shuffled = shuffle([...DATA]);
+    let idx = 0, score = 0, streak = 0, bestStreak = parseInt(localStorage.getItem("ttc.bestStreak")||"0",10), lives = 3;
+    let answered = null; // {correct,choice,timeMs}
+    let startMs = Date.now();
+    let progress = safeGet("ttc.progress") || { seen:[], wrong:[] };
+
+    // Stable options per question
+    let currentOptions = [];
+
+    // Timer
+    const DURATION_MS = 20000;     // 20s
+    const TICK_MS = 250;           // smoother
+    let timeLeft = DURATION_MS;
+    let timerId = null;
+    let stressAcc = 0;             // rising-stress ticks
+
+    // ---------- Utils ----------
+    function safeGet(k){ try{ return JSON.parse(localStorage.getItem(k)||""); }catch{ return null; } }
+    function shuffle(a){ const arr=[...a]; for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+    function makeChoices(q,pool){ const others=pool.filter(x=>x.term!==q.term); const picks=shuffle(others).slice(0,3).map(x=>x.term); return shuffle([q.term,...picks]); }
+    function labelFor(term){ return (lang==="ja") ? `${term} ／ ${KATA[term]||term}` : term; }
+
+    // ---------- Sound (WebAudio) ----------
+    let audioCtx=null;
+    const audioStatusEl = document.getElementById("audioStatus");
+    function updateAudioStatus(){
+      let cls="status ", txt="";
+      if(muted){ cls+="st-mut"; txt="Audio: Muted"; }
+      else if(!audioCtx){ cls+="st-off"; txt="Audio: Off"; }
+      else if(audioCtx.state==="running"){ cls+="st-run"; txt="Audio: Running"; }
+      else { cls+="st-sus"; txt="Audio: Suspended"; }
+      audioStatusEl.className = cls; audioStatusEl.lastElementChild.textContent = txt;
+    }
+    function enableAudio(){
+      if(!audioCtx){
+        const Ctx = window.AudioContext||window.webkitAudioContext;
+        if(Ctx) audioCtx = new Ctx();
+        if(audioCtx){ audioCtx.onstatechange = updateAudioStatus; }
+      }
+      if(audioCtx && audioCtx.state==="suspended"){ audioCtx.resume().catch(()=>{}); }
+      updateAudioStatus();
+    }
+    function beep(freq, dur){
+      if(muted) { updateAudioStatus(); return; }
+      enableAudio();
+      if(!audioCtx){ updateAudioStatus(); return; }
+      try{ if(audioCtx.state!=="running"){ audioCtx.resume().catch(()=>{}); } }catch(e){}
+      const o=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      o.type="square"; o.frequency.value=freq;
+      const now = audioCtx.currentTime;
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.20, now+0.01); // louder
+      g.gain.linearRampToValueAtTime(0.0, now+dur);
+      o.connect(g); g.connect(audioCtx.destination);
+      o.start(now); o.stop(now+dur);
+      updateAudioStatus();
+    }
+    window.addEventListener("pointerdown", enableAudio, { once:false });
+    window.addEventListener("keydown", enableAudio, { once:false });
+
+    // ---------- DOM ----------
+    const main = document.getElementById("main");
+    const langBtn = document.getElementById("langBtn");
+    const muteBtn = document.getElementById("muteBtn");
+    const testBtn = document.getElementById("testBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const footText = document.getElementById("footText");
+
+    langBtn.onclick=()=>{ lang=(lang==="en"?"ja":"en"); try{localStorage.setItem("ttc.lang",lang);}catch{} renderTopBar(); render(); };
+    muteBtn.onclick=()=>{ muted=!muted; try{localStorage.setItem("ttc.muted",muted?"1":"0");}catch{} renderTopBar(); updateAudioStatus(); };
+    testBtn.onclick=()=>{ enableAudio(); beep(720,0.18); };
+    restartBtn.onclick=()=>restart(false);
+    clearBtn.onclick=()=>{ // full reset (fixes "starts on review 9")
+      try{
+        localStorage.removeItem("ttc.progress");
+        localStorage.removeItem("ttc.bestStreak");
+      }catch{}
+      progress={seen:[], wrong:[]}; bestStreak=0;
+      restart(true);
+    };
+
+    function renderTopBar(){
+      langBtn.className="toggle"+(lang==="ja"?" on":"");
+      muteBtn.textContent = muted ? "Muted" : "Sound";
+      muteBtn.className="toggle"+(!muted?" on":"");
+      footText.textContent = (lang==="ja"
+        ? "学習モード：短い問題、即時フィードバック、進捗の可視化。誤答は自動的に復習対象になります。"
+        : "Learning mode: short questions, instant feedback, progress visualization. Missed items are automatically queued for review.");
+      updateAudioStatus();
+    }
+
+    function render(){
+      const elapsed = Math.round((Date.now()-startMs)/1000);
+      const stats = `
+        <div class="row">
+          <div class="stat"><div class="stat-label">${lang==="ja"?"スコア":"Score"}</div><div class="stat-value">${score}</div></div>
+          <div class="stat"><div class="stat-label">${lang==="ja"?"連続正解":"Streak"}</div><div class="stat-value">${streak} (best ${bestStreak})</div></div>
+          <div class="stat"><div class="stat-label">${lang==="ja"?"残りライフ":"Lives"}</div><div class="stat-value">${lives}</div></div>
+          <div class="stat"><div class="stat-label">${lang==="ja"?"経過時間":"Elapsed"}</div><div class="stat-value">${elapsed}s</div></div>
+        </div>`;
+
+      if(lives===0){
+        const missed = DATA.filter(d=>progress.wrong.includes(d.term));
+        const missList = missed.map(m=>`
+          <li style="padding:8px;border:1px dashed #fcd34d;background:#fffbeb;border-radius:10px">
+            <div class="stat-value" style="font-size:16px">${(lang==="ja") ? `${m.term} ／ ${KATA[m.term]||m.term}` : m.term}</div>
+            <div style="color:var(--muted); font-size:13px">${lang==="ja"?m.ja:m.en}</div>
+          </li>`).join("");
+        main.innerHTML = `
+          ${stats}
+          <div>
+            <h2 style="margin:0 0 8px 0; font-size:26px; font-weight:800;">${lang==="ja"?"ゲーム終了":"Game Over"}</h2>
+            <p style="color:var(--muted)">${lang==="ja"?"間違えた用語を復習しましょう。":"Review the items you missed, then restart for another short run."}</p>
+            ${missed.length? `<ul style="display:grid; gap:8px; grid-template-columns:1fr 1fr; margin-top:12px; padding-left:0; list-style:none;">${missList}</ul>`
+                            : `<p style="color:var(--muted); margin-top:12px;">${lang==="ja"?"素晴らしい！全問正解に近いです。":"Excellent—nearly perfect!"}</p>`}
+            <div style="margin-top:12px"><button class="next" id="againBtn">${lang==="ja"?"もう一度":"Play Again"}</button></div>
+          </div>
+          ${progressStrip()}`;
+        document.getElementById("againBtn").onclick=()=>restart(false);
+        return;
+      }
+
+      const q = shuffled[idx];
+      const pct = Math.max(0, Math.min(100, Math.round((timeLeft/DURATION_MS)*100)));
+      const pulseClass = timeLeft<=5000 ? "pulse" : "";
+
+      main.innerHTML = `
+        ${stats}
+        <div>
+          <div class="cat">${lang==="ja"?q.categoryJa:q.category}</div>
+
+          <!-- SMALL label -->
+          <div class="prompt-label">${lang==="ja" ? "この説明に当てはまる用語は？" : "Which term matches this description?"}</div>
+
+          <!-- BIG description -->
+          <div class="question-text">${lang==="ja"?q.ja:q.en}</div>
+
+          <div class="timer ${pulseClass}" aria-label="timer">
+            <div style="width:${pct}%; background:${pct>40?'var(--ok)': pct>20?'var(--warn)':'var(--bad)'}"></div>
+          </div>
+
+          <div class="grid2" id="opts"></div>
+          <div class="row2">
+            <span id="feedback">${answered ? feedbackText(q) : (lang==="ja"?"1〜4で選択":"Choose with 1–4")}</span>
+            <button class="next" id="nextBtn">${lang==="ja"?"次へ":"Next"}</button>
+          </div>
+        </div>
+        ${progressStrip()}`;
+
+      // Draw stable options (JA shows Alphabet ／ カタカナ)
+      const optsEl = document.getElementById("opts");
+      currentOptions.forEach((opt,i)=>{
+        const b=document.createElement("button");
+        b.className="btn";
+        b.innerHTML = `<div style="display:flex; align-items:center; gap:12px">
+          <span class="pill">${i+1}</span><span style="font-weight:700; font-size:16px">${labelFor(opt)}</span></div>`;
+        b.onclick=()=>handleAnswer(opt);
+        if(answered){
+          const isCorrect=(opt===q.term);
+          const isChosen=answered.choice===opt;
+          if(isCorrect) b.classList.add("good");
+          else if(isChosen) b.classList.add("bad");
+          else b.classList.add("dim");
+        }
+        optsEl.appendChild(b);
+      });
+
+      document.getElementById("nextBtn").onclick=()=>nextQuestion();
+    }
+
+    function progressStrip(){
+      const pct=Math.round((progress.seen.length/DATA.length)*100);
+      return `<div style="margin-top:8px">
+        <div style="color:var(--muted); font-size:14px; margin-bottom:4px">
+          ${lang==="ja"?"学習進捗":"Learning Progress"} — ${progress.seen.length}/${DATA.length} (${pct}%), ${lang==="ja"?"要復習":"Review"}: ${progress.wrong.length}
+        </div><div class="progress"><div style="width:${pct}%"></div></div></div>`;
+    }
+    function feedbackText(q){
+      if(!answered) return "";
+      return answered.correct ? (lang==="ja"?"正解！スペースで次へ":"Correct! Press Space for next.")
+            : (lang==="ja"?"不正解：":"Incorrect:")+" "+labelFor(answered.choice)+" → "+(lang==="ja"?"正解は":"Answer:")+" "+labelFor(q.term);
+    }
+
+    // ---------- Timer control (with rising-stress ticks) ----------
+    function startTimer(){
+      stopTimer(); timeLeft=DURATION_MS; stressAcc=0;
+      timerId=setInterval(()=>{
+        timeLeft=Math.max(0,timeLeft-TICK_MS);
+        if(!answered){ // stress beeps only while live
+          stressAcc += TICK_MS;
+          if(timeLeft<=2000 && stressAcc>=250){ beep(1000,0.12); stressAcc=0; }
+          else if(timeLeft<=5000 && stressAcc>=500){ beep(820,0.10); stressAcc=0; }
+          else if(timeLeft<=10000 && stressAcc>=1000){ beep(620,0.10); stressAcc=0; }
+        }
+        if(timeLeft===0 && !answered) handleAnswer("__timeout__");
+        render();
+      }, TICK_MS);
+    }
+    function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+
+    // ---------- Game flow ----------
+    function beginQuestion(){
+      const q = shuffled[idx];
+      currentOptions = makeChoices(q, shuffled); // compute ONCE per question
+      startTimer(); render();
+    }
+    function handleAnswer(choice){
+      if(answered) return;
+      const q=shuffled[idx];
+      const correct=(choice===q.term);
+      const timeMs=Math.max(1,DURATION_MS-timeLeft);
+      if(choice==="__timeout__"){ beep(220,0.18); } else { correct ? beep(520,0.16) : beep(260,0.18); }
+      const speedScore=Math.ceil((DURATION_MS-timeMs)/250);
+      const delta = correct ? 10 + speedScore + (streak*2) : 0;
+      answered={correct,choice,timeMs}; score+=delta; streak=correct?(streak+1):0;
+      bestStreak = correct ? Math.max(bestStreak, streak) : bestStreak;
+      lives = correct ? lives : Math.max(0,lives-1);
+      progress.seen = Array.from(new Set([...progress.seen, q.term]));
+      if(!correct) progress.wrong = Array.from(new Set([...progress.wrong, q.term]));
+      try{
+        localStorage.setItem("ttc.progress", JSON.stringify(progress));
+        localStorage.setItem("ttc.bestStreak", String(bestStreak));
+      }catch{}
+      stopTimer(); render();
+    }
+    function nextQuestion(){
+      if(idx+1>=shuffled.length || lives===0){ restart(false); return; }
+      answered=null; idx++; startMs=Date.now(); beep(740,0.12); beginQuestion();
+    }
+    function restart(hard){
+      answered=null; shuffled=shuffle([...DATA]); idx=0; lives=3; score=0; streak=0; startMs=Date.now();
+      if(hard){ progress={seen:[], wrong:[]}; try{localStorage.setItem("ttc.progress", JSON.stringify(progress));}catch{} }
+      beep(740,0.12); beginQuestion();
+    }
+
+    // ---------- Keyboard ----------
+    window.addEventListener("keydown",(e)=>{
+      if(e.key==="t"||e.key==="T"){ lang=(lang==="en"?"ja":"en"); try{localStorage.setItem("ttc.lang",lang);}catch{} renderTopBar(); render(); }
+      if(e.key==="m"||e.key==="M"){ muted=!muted; try{localStorage.setItem("ttc.muted",muted?"1":"0");}catch{} renderTopBar(); updateAudioStatus(); }
+      if(e.key==="r"||e.key==="R"){ restart(false); }
+      if(e.key===" " && answered){ nextQuestion(); }
+      if(!answered && ["1","2","3","4"].includes(e.key)){ const i=parseInt(e.key,10)-1; handleAnswer(currentOptions[i]); }
+    });
+
+    // ---------- Boot ----------
+    renderTopBar();
+    beginQuestion();
+  </script>
+</body>
+</html>
