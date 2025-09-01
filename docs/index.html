@@ -1,18 +1,69 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- Open Graph (Discord) — bilingual, single URL -->
-<meta property="og:title" content="Tintagel Terminology Challenge | ティンタジェル用語チャレンジ">
-<meta property="og:description" content="Bilingual terminology trainer (EN/JA) — fast rounds, instant feedback. 二言語対応（英語/日本語）の用語トレーナー—短時間ラウンド＆即時フィードバック。">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://kishinokura.github.io/tintagel-terminology-challenge/">
-<meta property="og:image" content="https://kishinokura.github.io/tintagel-terminology-challenge/og.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:site_name" content="Tintagel Terminology Challenge">
-<meta property="og:locale" content="en_US">
-<meta property="og:locale:alternate" content="ja_JP">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#111827"/>
+  <title>Tintagel Terminology Challenge — No-Dependencies (Audio status + big description)</title>
+  <style>
+    :root { --bg:#f5f5f5; --text:#111827; --muted:#6b7280; --card:#ffffff; --border:#d1d5db;
+            --ok:#34d399; --warn:#f59e0b; --bad:#ef4444; --dark:#111827; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",sans-serif;background:var(--bg);color:var(--text)}
+    .container{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+    header,main,footer{width:100%;max-width:960px}
+    header{display:flex;gap:12px;flex-direction:column;margin-top:16px}
+    @media(min-width:768px){header{flex-direction:row;align-items:flex-end;justify-content:space-between}}
+    h1{margin:0;font-weight:800;letter-spacing:-.01em}
+    .sub{color:var(--muted);font-size:12px}
+    .row{display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0}
+    @media(min-width:768px){.row{grid-template-columns:repeat(4,1fr)}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+    .stat-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+    .stat-value{margin-top:4px;font-size:20px;font-weight:600}
 
+    .toggle,.btn-lite{padding:8px 12px;border-radius:16px;border:1px solid var(--border);background:#fff;
+      box-shadow:0 2px 8px rgba(0,0,0,.05);font-size:14px;cursor:pointer}
+    .toggle.on{background:#ecfdf5;border-color:#6ee7b7}
+
+    /* Question sizing: small label, BIG description */
+    .prompt-label{margin:0;color:var(--muted);font-size:14px;font-weight:700;letter-spacing:.02em}
+    .question-text{margin:8px 0 0 0;color:#111827;font-size:22px;line-height:1.4;font-weight:700}
+
+    .timer{width:100%;height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    .timer>div{height:100%}
+    .timer.pulse{animation:pulse 1s infinite}
+    @keyframes pulse{
+      0%{box-shadow:0 0 0 0 rgba(239,68,68,.35)}
+      70%{box-shadow:0 0 0 10px rgba(239,68,68,0)}
+      100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}
+    }
+
+    .grid2{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+    @media(min-width:768px){.grid2{grid-template-columns:1fr 1fr}}
+    .btn{width:100%;text-align:left;padding:14px;border-radius:16px;border:1px solid var(--border);background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer}
+    .btn:hover{background:#fafafa}
+    .btn.bad{background:#fff1f2;border-color:#fb7185}
+    .btn.good{background:#ecfeff;border-color:#6ee7b7}
+    .btn.dim{opacity:.6}
+    .pill{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:var(--dark);color:#fff;font-size:12px;font-weight:700}
+    .row2{display:flex;align-items:center;justify-content:space-between;margin-top:16px;color:var(--muted);font-size:14px}
+    .next{padding:8px 12px;border-radius:16px;border:1px solid var(--border);background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer}
+    .progress{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    .progress>div{height:100%;background:#111827}
+    .chip{padding:10px;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px}
+    footer{margin:40px 0 24px;text-align:center;color:var(--muted);font-size:12px}
+    .bar{display:flex;gap:8px;flex-wrap:wrap}
+    .cat{color:var(--muted);font-size:13px;margin-bottom:8px}
+
+    /* Audio status pill */
+    .status{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:14px;border:1px solid}
+    .st-run{background:#ecfdf5;border-color:#6ee7b7;color:#065f46}
+    .st-sus{background:#fff7ed;border-color:#fbbf24;color:#92400e}
+    .st-mut{background:#fee2e2;border-color:#f87171;color:#7f1d1d}
+    .st-off{background:#e5e7eb;border-color:#9ca3af;color:#374151}
+    .dot{width:8px;height:8px;border-radius:999px;background:currentColor}
+  </style>
 </head>
 
 <body>
