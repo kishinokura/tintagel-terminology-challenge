@@ -4,47 +4,37 @@
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="theme-color" content="#111827"/>
-  <title>Tintagel Terminology Challenge — No-Dependencies Build</title>
+  <title>Tintagel Terminology Challenge — No-Dependencies Build (Stable)</title>
   <style>
-    :root {
-      --bg: #f5f5f5; --text:#111827;
-      --muted:#6b7280; --card:#ffffff; --border:#d1d5db;
-      --ok:#34d399; --warn:#f59e0b; --bad:#ef4444; --dark:#111827;
-    }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif; background:var(--bg); color:var(--text); }
-    .container { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:16px; }
-    header, main, footer { width:100%; max-width:960px; }
-    header { display:flex; gap:12px; flex-direction:column; margin-top:16px; }
-    @media (min-width:768px){ header{ flex-direction:row; align-items:flex-end; justify-content:space-between; } }
-    h1 { margin:0; font-weight:800; letter-spacing:-0.01em; }
-    .sub { color:var(--muted); font-size:12px; }
-    .row { display:grid; grid-template-columns:1fr; gap:12px; margin:16px 0; }
-    @media (min-width:768px){ .row{ grid-template-columns:repeat(4,1fr); } }
-    .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
-    .stat-label { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
-    .stat-value { margin-top:4px; font-size:20px; font-weight:600; }
-    .toggle { padding:8px 12px; border-radius:16px; border:1px solid var(--border); background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.05); font-size:14px; cursor:pointer; }
-    .toggle.on { background:#ecfdf5; border-color:#6ee7b7; }
-    .qcard h2 { margin:0; font-size:26px; font-weight:800; letter-spacing:-0.01em; }
-    .timer { width:100%; height:12px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
-    .timer > div { height:100%; }
-    .grid2 { display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px; }
-    @media (min-width:768px){ .grid2{ grid-template-columns:1fr 1fr; } }
-    .btn { width:100%; text-align:left; padding:14px; border-radius:16px; border:1px solid var(--border); background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.05); cursor:pointer; }
-    .btn:hover { background:#fafafa; }
-    .btn.bad { background:#fff1f2; border-color:#fb7185; }
-    .btn.good { background:#ecfeff; border-color:#6ee7b7; }
-    .btn.dim { opacity:.6; }
-    .pill { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:999px; background:var(--dark); color:#fff; font-size:12px; font-weight:700; }
-    .row2 { display:flex; align-items:center; justify-content:space-between; margin-top:16px; color:var(--muted); font-size:14px; }
-    .next { padding:8px 12px; border-radius:16px; border:1px solid var(--border); background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.05); cursor:pointer; }
-    .progress { height:8px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
-    .progress > div { height:100%; background:#111827; }
-    .chip { padding:10px; border:1px solid #fcd34d; background:#fffbeb; border-radius:12px; }
-    footer { margin:40px 0 24px; text-align:center; color:var(--muted); font-size:12px; }
-    .bar { display:flex; gap:8px; }
-    .cat { color:var(--muted); font-size:13px; margin-bottom:8px; }
+    :root { --bg:#f5f5f5; --text:#111827; --muted:#6b7280; --card:#ffffff; --border:#d1d5db;
+            --ok:#34d399; --warn:#f59e0b; --bad:#ef4444; --dark:#111827; }
+    *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,
+      "Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",sans-serif;background:var(--bg);color:var(--text)}
+    .container{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+    header,main,footer{width:100%;max-width:960px}
+    header{display:flex;gap:12px;flex-direction:column;margin-top:16px}
+    @media(min-width:768px){header{flex-direction:row;align-items:flex-end;justify-content:space-between}}
+    h1{margin:0;font-weight:800;letter-spacing:-.01em}.sub{color:var(--muted);font-size:12px}
+    .row{display:grid;grid-template-columns:1fr;gap:12px;margin:16px 0}
+    @media(min-width:768px){.row{grid-template-columns:repeat(4,1fr)}}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+    .stat-label{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+    .stat-value{margin-top:4px;font-size:20px;font-weight:600}
+    .toggle,.btn-lite{padding:8px 12px;border-radius:16px;border:1px solid var(--border);background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05);font-size:14px;cursor:pointer}
+    .toggle.on{background:#ecfdf5;border-color:#6ee7b7}
+    .qcard h2{margin:0;font-size:26px;font-weight:800;letter-spacing:-.01em}
+    .timer{width:100%;height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden}.timer>div{height:100%}
+    .grid2{display:grid;grid-template-columns:1fr;gap:12px;margin-top:16px}
+    @media(min-width:768px){.grid2{grid-template-columns:1fr 1fr}}
+    .btn{width:100%;text-align:left;padding:14px;border-radius:16px;border:1px solid var(--border);background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer}
+    .btn:hover{background:#fafafa}.btn.bad{background:#fff1f2;border-color:#fb7185}.btn.good{background:#ecfeff;border-color:#6ee7b7}.btn.dim{opacity:.6}
+    .pill{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:var(--dark);color:#fff;font-size:12px;font-weight:700}
+    .row2{display:flex;align-items:center;justify-content:space-between;margin-top:16px;color:var(--muted);font-size:14px}
+    .next{padding:8px 12px;border-radius:16px;border:1px solid var(--border);background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer}
+    .progress{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}.progress>div{height:100%;background:#111827}
+    .chip{padding:10px;border:1px solid #fcd34d;background:#fffbeb;border-radius:12px}
+    footer{margin:40px 0 24px;text-align:center;color:var(--muted);font-size:12px}
+    .bar{display:flex;gap:8px;flex-wrap:wrap}.cat{color:var(--muted);font-size:13px;margin-bottom:8px}
   </style>
 </head>
 <body>
@@ -52,11 +42,12 @@
     <header>
       <div>
         <h1 class="title">Tintagel Terminology Challenge</h1>
-        <div class="sub">Keyboard: [1–4]=answer • [Space]=next • [T]=toggle language • [M]=mute</div>
+        <div class="sub">Keyboard: [1–4]=answer • [Space]=next • [T]=toggle language • [M]=mute • [R]=restart</div>
       </div>
       <div class="bar">
         <button id="langBtn" class="toggle">日本語 / EN</button>
         <button id="muteBtn" class="toggle">Sound</button>
+        <button id="restartBtn" class="btn-lite">Restart</button>
       </div>
     </header>
 
@@ -70,15 +61,10 @@
   <script>
     // ---------- Data ----------
     const CATEGORY_JA = {
-      "Timing & Initiative": "タイミングと主導権",
-      "Awareness & Leverage": "感覚とテコの原理",
-      "Targets & Measure": "的と間合い・計測",
-      "Phases": "戦闘の段階",
-      "Vier Leger": "四つの構え",
-      "Meisterhäue": "名手の斬撃",
-      "Tactics": "戦術と基礎技術",
+      "Timing & Initiative":"タイミングと主導権","Awareness & Leverage":"感覚とテコの原理","Targets & Measure":"的と間合い・計測",
+      "Phases":"戦闘の段階","Vier Leger":"四つの構え","Meisterhäue":"名手の斬撃","Tactics":"戦術と基礎技術",
     };
-    const t = (term,en,ja,category)=>({ term, en, ja, category, categoryJa: CATEGORY_JA[category]||category });
+    const t=(term,en,ja,category)=>({term,en,ja,category,categoryJa:CATEGORY_JA[category]||category});
     const DATA = [
       t("Vor","Taking the initiative so the foe must react.","先手を取り主導権を握る。相手を反応に追い込む。","Timing & Initiative"),
       t("Indes","Acting in-the-instant; keep/regain initiative in the bind.","瞬間に行動し、バインド中の主導権を保つ/取り返す。","Timing & Initiative"),
@@ -117,52 +103,54 @@
 
     // ---------- State ----------
     const urlLang = new URLSearchParams(location.search).get("lang");
-    let lang = (urlLang === "ja" || urlLang === "en") ? urlLang : (localStorage.getItem("ttc.lang") || "en");
-    let muted = localStorage.getItem("ttc.muted") === "1";
+    let lang = (urlLang==="ja"||urlLang==="en") ? urlLang : (localStorage.getItem("ttc.lang")||"en");
+    let muted = localStorage.getItem("ttc.muted")==="1";
     let shuffled = shuffle([...DATA]);
-    let idx = 0;
-    let score = 0;
-    let streak = 0;
-    let bestStreak = parseInt(localStorage.getItem("ttc.bestStreak") || "0", 10);
-    let lives = 3;
-    let answered = null; // {correct, choice, timeMs}
+    let idx = 0, score = 0, streak = 0, bestStreak = parseInt(localStorage.getItem("ttc.bestStreak")||"0",10), lives = 3;
+    let answered = null; // {correct,choice,timeMs}
     let startMs = Date.now();
-    let progress = safeGet("ttc.progress") || { seen: [], wrong: [] };
+    let progress = safeGet("ttc.progress") || { seen:[], wrong:[] };
 
-    const DURATION_MS = 16000;
+    // Stable options for the current question (prevents flicker)
+    let currentOptions = [];
+
+    // Timer
+    const DURATION_MS = 20000;            // 20s default
+    const TICK_MS = 250;                  // update every 250ms (smoother, calmer)
     let timeLeft = DURATION_MS;
     let timerId = null;
 
+    // ---------- Utils ----------
     function safeGet(k){ try{ return JSON.parse(localStorage.getItem(k)||""); }catch{ return null; } }
     function shuffle(a){ const arr=[...a]; for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+    function makeChoices(q,pool){ const others=pool.filter(x=>x.term!==q.term); const picks=shuffle(others).slice(0,3).map(x=>x.term); return shuffle([q.term,...picks]); }
 
-    // ---------- Sound (tiny WebAudio beeps) ----------
-    let audioCtx = null;
-    function initAudio(){ if(!audioCtx){ const Ctx = window.AudioContext || window.webkitAudioContext; if(Ctx) audioCtx = new Ctx(); } }
-    function beep(freq, dur){ if(muted) return; initAudio(); if(!audioCtx) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type="square"; o.frequency.value=freq; g.gain.value=0.04; o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur); }
+    // ---------- Sound ----------
+    let audioCtx=null;
+    function initAudio(){ if(!audioCtx){ const Ctx=window.AudioContext||window.webkitAudioContext; if(Ctx) audioCtx=new Ctx(); } }
+    function beep(freq,dur){ if(muted) return; initAudio(); if(!audioCtx) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type="square"; o.frequency.value=freq; g.gain.value=0.04; o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+dur); }
 
-    // ---------- Render ----------
+    // ---------- DOM ----------
     const main = document.getElementById("main");
     const langBtn = document.getElementById("langBtn");
     const muteBtn = document.getElementById("muteBtn");
+    const restartBtn = document.getElementById("restartBtn");
     const footText = document.getElementById("footText");
 
-    langBtn.onclick = ()=>{ lang = (lang==="en"?"ja":"en"); localStorage.setItem("ttc.lang",lang); render(); };
-    muteBtn.onclick = ()=>{ muted = !muted; localStorage.setItem("ttc.muted", muted?"1":"0"); renderTopBar(); };
+    langBtn.onclick=()=>{ lang=(lang==="en"?"ja":"en"); localStorage.setItem("ttc.lang",lang); renderTopBar(); render(); };
+    muteBtn.onclick=()=>{ muted=!muted; localStorage.setItem("ttc.muted",muted?"1":"0"); renderTopBar(); };
+    restartBtn.onclick=()=>restart();
 
     function renderTopBar(){
-      langBtn.className = "toggle" + (lang==="ja" ? " on": "");
+      langBtn.className="toggle"+(lang==="ja"?" on":"");
       muteBtn.textContent = muted ? "Muted" : "Sound";
-      muteBtn.className = "toggle" + (!muted ? " on": "");
+      muteBtn.className="toggle"+(!muted?" on":"");
       footText.textContent = (lang==="ja"
         ? "学習モード：短い問題、即時フィードバック、進捗の可視化。誤答は自動的に復習対象になります。"
-        : "Learning mode: short questions, instant feedback, progress visualization. Missed items are automatically queued for review."
-      );
+        : "Learning mode: short questions, instant feedback, progress visualization. Missed items are automatically queued for review.");
     }
 
     function render(){
-      renderTopBar();
-      // Stats row
       const elapsed = Math.round((Date.now()-startMs)/1000);
       const stats = `
         <div class="row">
@@ -170,8 +158,7 @@
           <div class="card"><div class="stat-label">${lang==="ja"?"連続正解":"Streak"}</div><div class="stat-value">${streak} (best ${bestStreak})</div></div>
           <div class="card"><div class="stat-label">${lang==="ja"?"残りライフ":"Lives"}</div><div class="stat-value">${lives}</div></div>
           <div class="card"><div class="stat-label">${lang==="ja"?"経過時間":"Elapsed"}</div><div class="stat-value">${elapsed}s</div></div>
-        </div>
-      `;
+        </div>`;
 
       if(lives===0){
         const missed = DATA.filter(d=>progress.wrong.includes(d.term));
@@ -187,14 +174,12 @@
                             : `<p style="color:var(--muted); margin-top:12px;">${lang==="ja"?"素晴らしい！全問正解に近いです。":"Excellent—nearly perfect!"}</p>`}
             <div style="margin-top:16px"><button class="next" id="againBtn">${lang==="ja"?"もう一度":"Play Again"}</button></div>
           </div>
-          ${progressStrip()}
-        `;
-        document.getElementById("againBtn").onclick = ()=>restart();
+          ${progressStrip()}`;
+        document.getElementById("againBtn").onclick=()=>restart();
         return;
       }
 
       const q = shuffled[idx];
-      const options = makeChoices(q, shuffled);
       const pct = Math.max(0, Math.min(100, Math.round((timeLeft/DURATION_MS)*100)));
 
       main.innerHTML = `
@@ -214,19 +199,19 @@
             <button class="next" id="nextBtn">${lang==="ja"?"次へ":"Next"}</button>
           </div>
         </div>
-        ${progressStrip()}
-      `;
+        ${progressStrip()}`;
 
+      // draw stable options
       const optsEl = document.getElementById("opts");
-      options.forEach((opt, i)=>{
-        const b = document.createElement("button");
-        b.className = "btn";
+      currentOptions.forEach((opt,i)=>{
+        const b=document.createElement("button");
+        b.className="btn";
         b.innerHTML = `<div style="display:flex; align-items:center; gap:12px">
           <span class="pill">${i+1}</span><span style="font-weight:700; font-size:16px">${opt}</span></div>`;
-        b.onclick = ()=>handleAnswer(opt);
+        b.onclick=()=>handleAnswer(opt);
         if(answered){
-          const isCorrect = (opt===q.term);
-          const isChosen = answered.choice===opt;
+          const isCorrect=(opt===q.term);
+          const isChosen=answered.choice===opt;
           if(isCorrect) b.classList.add("good");
           else if(isChosen) b.classList.add("bad");
           else b.classList.add("dim");
@@ -234,110 +219,72 @@
         optsEl.appendChild(b);
       });
 
-      document.getElementById("nextBtn").onclick = ()=>nextQuestion();
+      document.getElementById("nextBtn").onclick=()=>nextQuestion();
     }
 
     function progressStrip(){
-      const pct = Math.round((progress.seen.length/DATA.length)*100);
-      return `
-        <div style="margin-top:16px">
-          <div style="color:var(--muted); font-size:14px; margin-bottom:6px">
-            ${lang==="ja"?"学習進捗":"Learning Progress"} — ${progress.seen.length}/${DATA.length} (${pct}%), ${lang==="ja"?"要復習":"Review"}: ${progress.wrong.length}
-          </div>
-          <div class="progress"><div style="width:${pct}%"></div></div>
-        </div>
-      `;
+      const pct=Math.round((progress.seen.length/DATA.length)*100);
+      return `<div style="margin-top:16px">
+        <div style="color:var(--muted); font-size:14px; margin-bottom:6px">
+          ${lang==="ja"?"学習進捗":"Learning Progress"} — ${progress.seen.length}/${DATA.length} (${pct}%), ${lang==="ja"?"要復習":"Review"}: ${progress.wrong.length}
+        </div><div class="progress"><div style="width:${pct}%"></div></div></div>`;
     }
-
     function feedbackText(q){
       if(!answered) return "";
-      return answered.correct
-        ? (lang==="ja"?"正解！スペースで次へ":"Correct! Press Space for next.")
-        : (lang==="ja"?"不正解：":"Incorrect:") + " " + answered.choice + " → " + (lang==="ja"?"正解は":"Answer:") + " " + q.term;
+      return answered.correct ? (lang==="ja"?"正解！スペースで次へ":"Correct! Press Space for next.")
+            : (lang==="ja"?"不正解：":"Incorrect:")+" "+answered.choice+" → "+(lang==="ja"?"正解は":"Answer:")+" "+q.term;
     }
 
-    function makeChoices(q, pool){
-      const others = pool.filter(x=>x.term!==q.term);
-      const picks = shuffle(others).slice(0,3).map(x=>x.term);
-      return shuffle([q.term, ...picks]);
+    // ---------- Timer control ----------
+    function startTimer(){ stopTimer(); timeLeft=DURATION_MS;
+      timerId=setInterval(()=>{ timeLeft=Math.max(0,timeLeft-TICK_MS); if(timeLeft===0 && !answered) handleAnswer("__timeout__"); render(); }, TICK_MS);
     }
+    function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
 
     // ---------- Game flow ----------
-    function startTimer(){
-      stopTimer();
-      timeLeft = DURATION_MS;
-      timerId = setInterval(()=>{
-        timeLeft = Math.max(0, timeLeft-100);
-        if(timeLeft===0 && !answered) handleAnswer("__timeout__");
-        render();
-      }, 100);
+    function beginQuestion(){
+      const q = shuffled[idx];
+      currentOptions = makeChoices(q, shuffled); // compute ONCE per question
+      startTimer();
+      render();
     }
-    function stopTimer(){ if(timerId) { clearInterval(timerId); timerId = null; } }
-
     function handleAnswer(choice){
       if(answered) return;
-      const q = shuffled[idx];
-      const correct = (choice===q.term);
-      const timeMs = Math.max(1, DURATION_MS - timeLeft);
-      if(choice==="__timeout__"){ beep(160,0.06); }
-      else { correct ? beep(420,0.04) : beep(160,0.06); }
-
-      const speedScore = Math.ceil((DURATION_MS - timeMs)/250);
+      const q=shuffled[idx];
+      const correct=(choice===q.term);
+      const timeMs=Math.max(1,DURATION_MS-timeLeft);
+      if(choice==="__timeout__"){ beep(160,0.06); } else { correct ? beep(420,0.04) : beep(160,0.06); }
+      const speedScore=Math.ceil((DURATION_MS-timeMs)/250);
       const delta = correct ? 10 + speedScore + (streak*2) : 0;
-
-      answered = { correct, choice, timeMs };
-      score += delta;
-      streak = correct ? (streak+1) : 0;
+      answered={correct,choice,timeMs}; score+=delta; streak=correct?(streak+1):0;
       bestStreak = correct ? Math.max(bestStreak, streak) : bestStreak;
-      lives = correct ? lives : Math.max(0, lives-1);
+      lives = correct ? lives : Math.max(0,lives-1);
       progress.seen = Array.from(new Set([...progress.seen, q.term]));
       if(!correct) progress.wrong = Array.from(new Set([...progress.wrong, q.term]));
-
       localStorage.setItem("ttc.progress", JSON.stringify(progress));
       localStorage.setItem("ttc.bestStreak", String(bestStreak));
-
-      stopTimer();
-      render();
+      stopTimer(); render();
     }
-
     function nextQuestion(){
-      if(idx+1 >= shuffled.length || lives===0){
-        restart(); return;
-      }
-      answered = null;
-      idx++;
-      startMs = Date.now();
-      beep(620,0.03);
-      startTimer();
-      render();
+      if(idx+1>=shuffled.length || lives===0){ restart(); return; }
+      answered=null; idx++; startMs=Date.now(); beep(620,0.03); beginQuestion();
     }
-
     function restart(){
-      answered = null;
-      shuffled = shuffle([...DATA]);
-      idx = 0; lives = 3; score = 0; streak = 0;
-      startMs = Date.now();
-      beep(620,0.03);
-      startTimer();
-      render();
+      answered=null; shuffled=shuffle([...DATA]); idx=0; lives=3; score=0; streak=0; startMs=Date.now(); beep(620,0.03); beginQuestion();
     }
 
     // ---------- Keyboard ----------
     window.addEventListener("keydown",(e)=>{
-      if(e.key==="t" || e.key==="T"){ lang = (lang==="en"?"ja":"en"); localStorage.setItem("ttc.lang",lang); render(); }
-      if(e.key==="m" || e.key==="M"){ muted = !muted; localStorage.setItem("ttc.muted", muted?"1":"0"); renderTopBar(); }
+      if(e.key==="t"||e.key==="T"){ lang=(lang==="en"?"ja":"en"); localStorage.setItem("ttc.lang",lang); renderTopBar(); render(); }
+      if(e.key==="m"||e.key==="M"){ muted=!muted; localStorage.setItem("ttc.muted",muted?"1":"0"); renderTopBar(); }
+      if(e.key==="r"||e.key==="R"){ restart(); }
       if(e.key===" " && answered){ nextQuestion(); }
-      if(!answered && ["1","2","3","4"].includes(e.key)){
-        const q = shuffled[idx];
-        const options = makeChoices(q, shuffled);
-        handleAnswer(options[parseInt(e.key,10)-1]);
-      }
+      if(!answered && ["1","2","3","4"].includes(e.key)){ const i=parseInt(e.key,10)-1; handleAnswer(currentOptions[i]); }
     });
 
     // ---------- Boot ----------
     renderTopBar();
-    startTimer();
-    render();
+    beginQuestion();
   </script>
 </body>
 </html>
