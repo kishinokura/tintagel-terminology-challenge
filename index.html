@@ -1,339 +1,347 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#111827" />
-    <title>Tintagel Terminology Challenge (No-Build)</title>
-    <!-- Tailwind CSS from CDN (no build step required) -->
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-neutral-100">
-    <div id="root"></div>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="theme-color" content="#111827"/>
+  <title>Tintagel Terminology Challenge — No-Dependencies Build</title>
+  <style>
+    :root {
+      --bg: #f5f5f5; --text:#111827;
+      --muted:#6b7280; --card:#ffffff; --border:#d1d5db;
+      --ok:#34d399; --warn:#f59e0b; --bad:#ef4444; --dark:#111827;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif; background:var(--bg); color:var(--text); }
+    .container { min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:16px; }
+    header, main, footer { width:100%; max-width:960px; }
+    header { display:flex; gap:12px; flex-direction:column; margin-top:16px; }
+    @media (min-width:768px){ header{ flex-direction:row; align-items:flex-end; justify-content:space-between; } }
+    h1 { margin:0; font-weight:800; letter-spacing:-0.01em; }
+    .sub { color:var(--muted); font-size:12px; }
+    .row { display:grid; grid-template-columns:1fr; gap:12px; margin:16px 0; }
+    @media (min-width:768px){ .row{ grid-template-columns:repeat(4,1fr); } }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:16px; box-shadow:0 2px 8px rgba(0,0,0,0.05); }
+    .stat-label { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+    .stat-value { margin-top:4px; font-size:20px; font-weight:600; }
+    .toggle { padding:8px 12px; border-radius:16px; border:1px solid var(--border); background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.05); font-size:14px; cursor:pointer; }
+    .toggle.on { background:#ecfdf5; border-color:#6ee7b7; }
+    .qcard h2 { margin:0; font-size:26px; font-weight:800; letter-spacing:-0.01em; }
+    .timer { width:100%; height:12px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
+    .timer > div { height:100%; }
+    .grid2 { display:grid; grid-template-columns:1fr; gap:12px; margin-top:16px; }
+    @media (min-width:768px){ .grid2{ grid-template-columns:1fr 1fr; } }
+    .btn { width:100%; text-align:left; padding:14px; border-radius:16px; border:1px solid var(--border); background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.05); cursor:pointer; }
+    .btn:hover { background:#fafafa; }
+    .btn.bad { background:#fff1f2; border-color:#fb7185; }
+    .btn.good { background:#ecfeff; border-color:#6ee7b7; }
+    .btn.dim { opacity:.6; }
+    .pill { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:999px; background:var(--dark); color:#fff; font-size:12px; font-weight:700; }
+    .row2 { display:flex; align-items:center; justify-content:space-between; margin-top:16px; color:var(--muted); font-size:14px; }
+    .next { padding:8px 12px; border-radius:16px; border:1px solid var(--border); background:#fff; box-shadow:0 2px 8px rgba(0,0,0,0.05); cursor:pointer; }
+    .progress { height:8px; background:#e5e7eb; border-radius:999px; overflow:hidden; }
+    .progress > div { height:100%; background:#111827; }
+    .chip { padding:10px; border:1px solid #fcd34d; background:#fffbeb; border-radius:12px; }
+    footer { margin:40px 0 24px; text-align:center; color:var(--muted); font-size:12px; }
+    .bar { display:flex; gap:8px; }
+    .cat { color:var(--muted); font-size:13px; margin-bottom:8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1 class="title">Tintagel Terminology Challenge</h1>
+        <div class="sub">Keyboard: [1–4]=answer • [Space]=next • [T]=toggle language • [M]=mute</div>
+      </div>
+      <div class="bar">
+        <button id="langBtn" class="toggle">日本語 / EN</button>
+        <button id="muteBtn" class="toggle">Sound</button>
+      </div>
+    </header>
 
-    <!-- One-file app using Preact + HTM (ES modules via CDN). No Vite, no Actions. -->
-    <script type="module">
-      import { h, render } from "https://esm.sh/preact@10.24.1";
-      import { useEffect, useMemo, useRef, useState } from "https://esm.sh/preact@10.24.1/hooks";
-      import htm from "https://esm.sh/htm@3.1.1";
-      const html = htm.bind(h);
+    <main id="main"></main>
 
-      // ---------- Helpers ----------
-      function shuffle(arr) {
-        const a = [...arr];
-        for (let i = a.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [a[i], a[j]] = [a[j], a[i]];
-        }
-        return a;
-      }
-      function useSound(freq, dur) {
-        const ctxRef = useRef(null);
-        useEffect(() => {
-          if (typeof window !== "undefined" && !ctxRef.current) {
-            const Ctx = window.AudioContext || window.webkitAudioContext;
-            if (Ctx) ctxRef.current = new Ctx();
-          }
-        }, []);
-        return () => {
-          const ctx = ctxRef.current;
-          if (!ctx) return;
-          const o = ctx.createOscillator();
-          const g = ctx.createGain();
-          o.type = "square";
-          o.frequency.value = freq;
-          g.gain.value = 0.04;
-          o.connect(g);
-          g.connect(ctx.destination);
-          o.start();
-          o.stop(ctx.currentTime + dur);
-        };
-      }
+    <footer>
+      <p id="footText">Learning mode: short questions, instant feedback, progress visualization. Missed items are automatically queued for review.</p>
+    </footer>
+  </div>
 
-      const CATEGORY_JA = {
-        "Timing & Initiative": "タイミングと主導権",
-        "Awareness & Leverage": "感覚とテコの原理",
-        "Targets & Measure": "的と間合い・計測",
-        "Phases": "戦闘の段階",
-        "Vier Leger": "四つの構え",
-        "Meisterhäue": "名手の斬撃",
-        "Tactics": "戦術と基礎技術",
-      };
-      const t = (term, en, ja, category) => ({ term, en, ja, category, categoryJa: CATEGORY_JA[category] || category });
+  <script>
+    // ---------- Data ----------
+    const CATEGORY_JA = {
+      "Timing & Initiative": "タイミングと主導権",
+      "Awareness & Leverage": "感覚とテコの原理",
+      "Targets & Measure": "的と間合い・計測",
+      "Phases": "戦闘の段階",
+      "Vier Leger": "四つの構え",
+      "Meisterhäue": "名手の斬撃",
+      "Tactics": "戦術と基礎技術",
+    };
+    const t = (term,en,ja,category)=>({ term, en, ja, category, categoryJa: CATEGORY_JA[category]||category });
+    const DATA = [
+      t("Vor","Taking the initiative so the foe must react.","先手を取り主導権を握る。相手を反応に追い込む。","Timing & Initiative"),
+      t("Indes","Acting in-the-instant; keep/regain initiative in the bind.","瞬間に行動し、バインド中の主導権を保つ/取り返す。","Timing & Initiative"),
+      t("Nach","Acting after; being in a reactive role.","相手の後で動く反応的な立場。","Timing & Initiative"),
+      t("Fühlen","Awareness in the fight (pressure, distance, stance, balance, grip, breath).","戦いの全体状況の感覚（剣圧・距離・姿勢・重心・握り・呼吸）。","Awareness & Leverage"),
+      t("Stark","Strong bind: contact nearer your hilt.","強いバインド：接触点が柄に近い。","Awareness & Leverage"),
+      t("Schwach","Weak bind: contact nearer your point.","弱いバインド：接触点が剣先に近い。","Awareness & Leverage"),
+      t("Vier Blößen","The four openings.","四つの開口部。","Targets & Measure"),
+      t("Länge","Distance / reach.","間合い・リーチ。","Targets & Measure"),
+      t("Maße","Proper measure / proportion (time & space).","正しい計測（間と時）。","Targets & Measure"),
+      t("Zufechten","Onset: closing in & first attack.","攻撃開始の接近段階と最初の攻撃。","Phases"),
+      t("Krieg","War: middle phase where blades bind & techniques flow.","主戦局面：バインド内で技が競り合う段階。","Phases"),
+      t("Abzug","Withdrawal: safe exit & disengage.","離脱：攻防後に安全に下がる。","Phases"),
+      t("Vom Tag","High roof guard; strike down.","上段構え。斬り下ろす。","Vier Leger"),
+      t("Ochs","High thrusting guard with point forward.","高い突き構え（剣先を相手へ）。","Vier Leger"),
+      t("Pflug","Low thrusting guard with point forward.","低い突き構え（剣先を相手へ）。","Vier Leger"),
+      t("Alber","Low 'fool' guard; invitation.","低い誘いの構え。","Vier Leger"),
+      t("Zornhau","Wrath-cut: break basic strikes while threatening to hit or thrust.","怒りの斬り：相手の基本打を破りつつ打突を脅かす。","Meisterhäue"),
+      t("Krumphau","Crooked-cut; breaks Ochs.","曲線の斬り。オックスを破る。","Meisterhäue"),
+      t("Zwerchhau","Thwart-cut; breaks Vom Tag.","横の斬り。フォムタークを破る。","Meisterhäue"),
+      t("Schielhau","Squinting-cut; breaks Pflug.","目くらましの斬り。フルークを破る。","Meisterhäue"),
+      t("Scheitelhau","Parting-cut downward on the crown; breaks Alber.","頭頂へ割り込む斬り。アルバーを破る。","Meisterhäue"),
+      t("Abschneiden","Slicing off at the hands/arms.","手や腕を切り落とす。","Tactics"),
+      t("Absetzen","Setting-aside thrust.","攻撃を逸らしながら突く。","Tactics"),
+      t("Durchlaufen","Running through; body displacement.","駆け抜ける（体さばき）。","Tactics"),
+      t("Durchwechseln","Change-through under the blade.","剣線下の切り替え。","Tactics"),
+      t("Hände Drücken","Pressing the hands in close play.","至近距離で相手の手を押し込む。","Tactics"),
+      t("Hängen","Hanging guard/hold.","吊り構え。","Tactics"),
+      t("Nachreisen","Travel-after pursuing strike.","追い討ち・追撃。","Tactics"),
+      t("Schnappen","Snapping: return attack using opponent's power.","相手の力を利用して返す打ち。","Tactics"),
+      t("Überlaufen","Over-running above the blade to out-reach.","上から制圧して射程を超える。","Tactics"),
+      t("Versetzen","Displacing: shift the blade off-line.","剣線をずらす。","Tactics"),
+      t("Winden","Eight windings into Ochs/Pflug; leverage in the bind.","8種の巻き（高位オックス4・低位フルーク4）。","Tactics"),
+      t("Zucken","Twitching; sudden pull-snap.","引き抜き。素早いスナップ。","Tactics"),
+    ];
 
-      const DATA = [
-        // Timing & Initiative
-        t('Vor','Taking the initiative so the foe must react.','先手を取り主導権を握る。相手を反応に追い込む。','Timing & Initiative'),
-        t('Indes','Acting in-the-instant; keep/regain initiative in the bind.','瞬間に行動し、バインド中の主導権を保つ/取り返す。','Timing & Initiative'),
-        t('Nach','Acting after; being in a reactive role.','相手の後で動く反応的な立場。','Timing & Initiative'),
+    // ---------- State ----------
+    const urlLang = new URLSearchParams(location.search).get("lang");
+    let lang = (urlLang === "ja" || urlLang === "en") ? urlLang : (localStorage.getItem("ttc.lang") || "en");
+    let muted = localStorage.getItem("ttc.muted") === "1";
+    let shuffled = shuffle([...DATA]);
+    let idx = 0;
+    let score = 0;
+    let streak = 0;
+    let bestStreak = parseInt(localStorage.getItem("ttc.bestStreak") || "0", 10);
+    let lives = 3;
+    let answered = null; // {correct, choice, timeMs}
+    let startMs = Date.now();
+    let progress = safeGet("ttc.progress") || { seen: [], wrong: [] };
 
-        // Awareness & Leverage
-        t('Fühlen','Awareness in the fight (pressure, distance, stance, balance, grip, breath).','戦いの全体状況の感覚（剣圧・距離・姿勢・重心・握り・呼吸）。','Awareness & Leverage'),
-        t('Stark','Strong bind: contact nearer your hilt.','強いバインド：接触点が柄に近い。','Awareness & Leverage'),
-        t('Schwach','Weak bind: contact nearer your point.','弱いバインド：接触点が剣先に近い。','Awareness & Leverage'),
+    const DURATION_MS = 16000;
+    let timeLeft = DURATION_MS;
+    let timerId = null;
 
-        // Targets & Measure
-        t('Vier Blößen','The four openings.','四つの開口部。','Targets & Measure'),
-        t('Länge','Distance / reach.','間合い・リーチ。','Targets & Measure'),
-        t('Maße','Proper measure / proportion (time & space).','正しい計測（間と時）。','Targets & Measure'),
+    function safeGet(k){ try{ return JSON.parse(localStorage.getItem(k)||""); }catch{ return null; } }
+    function shuffle(a){ const arr=[...a]; for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
 
-        // Phases
-        t('Zufechten','Onset: closing in & first attack.','攻撃開始の接近段階と最初の攻撃。','Phases'),
-        t('Krieg','War: middle phase where blades bind & techniques flow.','主戦局面：バインド内で技が競り合う段階。','Phases'),
-        t('Abzug','Withdrawal: safe exit & disengage.','離脱：攻防後に安全に下がる。','Phases'),
+    // ---------- Sound (tiny WebAudio beeps) ----------
+    let audioCtx = null;
+    function initAudio(){ if(!audioCtx){ const Ctx = window.AudioContext || window.webkitAudioContext; if(Ctx) audioCtx = new Ctx(); } }
+    function beep(freq, dur){ if(muted) return; initAudio(); if(!audioCtx) return; const o=audioCtx.createOscillator(); const g=audioCtx.createGain(); o.type="square"; o.frequency.value=freq; g.gain.value=0.04; o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur); }
 
-        // Vier Leger
-        t('Vom Tag','High roof guard; strike down.','上段構え。斬り下ろす。','Vier Leger'),
-        t('Ochs','High thrusting guard with point forward.','高い突き構え（剣先を相手へ）。','Vier Leger'),
-        t('Pflug','Low thrusting guard with point forward.','低い突き構え（剣先を相手へ）。','Vier Leger'),
-        t('Alber','Low "fool" guard; invitation.','低い誘いの構え。','Vier Leger'),
+    // ---------- Render ----------
+    const main = document.getElementById("main");
+    const langBtn = document.getElementById("langBtn");
+    const muteBtn = document.getElementById("muteBtn");
+    const footText = document.getElementById("footText");
 
-        // Meisterhäue
-        t('Zornhau','Wrath-cut: break basic strikes while threatening to hit or thrust.','怒りの斬り：相手の基本打を破りつつ打突を脅かす。','Meisterhäue'),
-        t('Krumphau','Crooked-cut; breaks Ochs.','曲線の斬り。オックスを破る。','Meisterhäue'),
-        t('Zwerchhau','Thwart-cut; breaks Vom Tag.','横の斬り。フォムタークを破る。','Meisterhäue'),
-        t('Schielhau','Squinting-cut; breaks Pflug.','目くらましの斬り。フルークを破る。','Meisterhäue'),
-        t('Scheitelhau','Parting-cut downward on the crown; breaks Alber.','頭頂へ割り込む斬り。アルバーを破る。','Meisterhäue'),
+    langBtn.onclick = ()=>{ lang = (lang==="en"?"ja":"en"); localStorage.setItem("ttc.lang",lang); render(); };
+    muteBtn.onclick = ()=>{ muted = !muted; localStorage.setItem("ttc.muted", muted?"1":"0"); renderTopBar(); };
 
-        // Tactics
-        t('Abschneiden','Slicing off at the hands/arms.','手や腕を切り落とす。','Tactics'),
-        t('Absetzen','Setting-aside thrust.','攻撃を逸らしながら突く。','Tactics'),
-        t('Durchlaufen','Running through; body displacement.','駆け抜ける（体さばき）。','Tactics'),
-        t('Durchwechseln','Change-through under the blade.','剣線下の切り替え。','Tactics'),
-        t('Hände Drücken','Pressing the hands in close play.','至近距離で相手の手を押し込む。','Tactics'),
-        t('Hängen','Hanging guard/hold.','吊り構え。','Tactics'),
-        t('Nachreisen','Travel-after pursuing strike.','追い討ち・追撃。','Tactics'),
-        t('Schnappen','Snapping: return attack using opponent\'s power.','相手の力を利用して返す打ち。','Tactics'),
-        t('Überlaufen','Over-running above the blade to out-reach.','上から制圧して射程を超える。','Tactics'),
-        t('Versetzen','Displacing: shift the blade off-line.','剣線をずらす。','Tactics'),
-        t('Winden','Eight windings into Ochs/Pflug; leverage in the bind.','8種の巻き（高位オックス4・低位フルーク4）。','Tactics'),
-        t('Zucken','Twitching; sudden pull-snap.','引き抜き。素早いスナップ。','Tactics'),
-      ];
+    function renderTopBar(){
+      langBtn.className = "toggle" + (lang==="ja" ? " on": "");
+      muteBtn.textContent = muted ? "Muted" : "Sound";
+      muteBtn.className = "toggle" + (!muted ? " on": "");
+      footText.textContent = (lang==="ja"
+        ? "学習モード：短い問題、即時フィードバック、進捗の可視化。誤答は自動的に復習対象になります。"
+        : "Learning mode: short questions, instant feedback, progress visualization. Missed items are automatically queued for review."
+      );
+    }
 
-      function getUrlLang() {
-        const p = new URLSearchParams(location.search).get("lang");
-        return p === "ja" || p === "en" ? p : null;
-      }
+    function render(){
+      renderTopBar();
+      // Stats row
+      const elapsed = Math.round((Date.now()-startMs)/1000);
+      const stats = `
+        <div class="row">
+          <div class="card"><div class="stat-label">${lang==="ja"?"スコア":"Score"}</div><div class="stat-value">${score}</div></div>
+          <div class="card"><div class="stat-label">${lang==="ja"?"連続正解":"Streak"}</div><div class="stat-value">${streak} (best ${bestStreak})</div></div>
+          <div class="card"><div class="stat-label">${lang==="ja"?"残りライフ":"Lives"}</div><div class="stat-value">${lives}</div></div>
+          <div class="card"><div class="stat-label">${lang==="ja"?"経過時間":"Elapsed"}</div><div class="stat-value">${elapsed}s</div></div>
+        </div>
+      `;
 
-      // ---------- Tiny UI pieces ----------
-      function Stat({ label, value }) {
-        return html`<div class="bg-white rounded-2xl shadow p-4">
-          <div class="text-xs uppercase tracking-wide text-neutral-500">${label}</div>
-          <div class="text-xl font-semibold mt-1">${value}</div>
-        </div>`;
-      }
-      function Toggle({ label, on, setOn }) {
-        return html`<button
-          class="px-3 py-2 rounded-2xl shadow text-sm border ${on ? 'bg-emerald-100 border-emerald-300' : 'bg-white border-neutral-300'}"
-          onClick=${() => setOn(!on)}>${label}</button>`;
-      }
-      function ProgressStrip({ seen, total, wrong, lang }) {
-        const pct = Math.round((seen / total) * 100);
-        return html`<div class="mt-6">
-          <div class="text-sm text-neutral-600 mb-1">
-            ${lang==='ja'?'学習進捗':'Learning Progress'} — ${seen}/${total} (${pct}%), ${lang==='ja'?'要復習':'Review'}: ${wrong}
+      if(lives===0){
+        const missed = DATA.filter(d=>progress.wrong.includes(d.term));
+        const missList = missed.map(m=>`
+          <li class="chip"><div class="stat-value" style="font-size:16px">${m.term}</div>
+          <div style="color:var(--muted); font-size:13px">${lang==="ja"?m.ja:m.en}</div></li>`).join("");
+        main.innerHTML = `
+          ${stats}
+          <div class="card">
+            <h2 style="margin:0 0 8px 0; font-size:26px; font-weight:800;">${lang==="ja"?"ゲーム終了":"Game Over"}</h2>
+            <p style="color:var(--muted)">${lang==="ja"?"間違えた用語を復習しましょう。":"Review the items you missed, then restart for another short run."}</p>
+            ${missed.length? `<ul style="display:grid; gap:8px; grid-template-columns:1fr 1fr; margin-top:12px; padding-left:0; list-style:none;">${missList}</ul>`
+                            : `<p style="color:var(--muted); margin-top:12px;">${lang==="ja"?"素晴らしい！全問正解に近いです。":"Excellent—nearly perfect!"}</p>`}
+            <div style="margin-top:16px"><button class="next" id="againBtn">${lang==="ja"?"もう一度":"Play Again"}</button></div>
           </div>
-          <div class="h-2 w-full bg-neutral-200 rounded-full overflow-hidden">
-            <div class="h-full bg-neutral-800" style=${{ width: pct + '%' }}></div>
-          </div>
-        </div>`;
+          ${progressStrip()}
+        `;
+        document.getElementById("againBtn").onclick = ()=>restart();
+        return;
       }
-      function GameOverPanel({ lang, onRestart, progress, DATA }) {
-        const missed = DATA.filter(d => progress.wrong.includes(d.term));
-        return html`<div class="bg-white rounded-3xl shadow-lg p-6 md:p-8">
-          <h2 class="text-2xl md:text-3xl font-bold mb-2">${lang==='ja'?'ゲーム終了':'Game Over'}</h2>
-          <p class="text-neutral-700">${lang==='ja'?'間違えた用語を復習しましょう。':'Review the items you missed, then restart for another short run.'}</p>
-          ${missed.length > 0 ? html`<ul class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
-            ${missed.map(m => html`<li class="p-3 border rounded-xl bg-amber-50 border-amber-300">
-              <div class="font-semibold">${m.term}</div>
-              <div class="text-sm text-neutral-700">${lang==='ja'?m.ja:m.en}</div>
-            </li>`)}
-          </ul>` : html`<p class="mt-4 text-neutral-700">${lang==='ja'?'素晴らしい！全問正解に近いです。':'Excellent—nearly perfect!'}</p>`}
-          <div class="mt-6">
-            <button onClick=${onRestart} class="px-4 py-2 rounded-2xl border border-neutral-300 bg-white shadow">
-              ${lang==='ja'?'もう一度':'Play Again'}
-            </button>
-          </div>
-        </div>`;
-      }
-      function QuestionCard({ q, lang, options, timeLeft, duration, answered, onAnswer, onNext }) {
-        const pct = Math.max(0, Math.min(100, Math.round((timeLeft / duration) * 100)));
-        return html`<div class="bg-white rounded-3xl shadow-lg p-6 md:p-8">
-          <div class="mb-2 text-sm text-neutral-500">${lang==='ja'?q.categoryJa:q.category}</div>
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-            <h2 class="text-2xl md:text-3xl font-bold tracking-tight">${q.term}</h2>
-            <div class="w-full md:w-72 h-3 bg-neutral-200 rounded-full overflow-hidden" aria-label="timer">
-              <div class="${pct>40?'bg-emerald-400': pct>20?'bg-amber-400':'bg-rose-500'} h-full" style=${{ width: pct + '%' }}></div>
+
+      const q = shuffled[idx];
+      const options = makeChoices(q, shuffled);
+      const pct = Math.max(0, Math.min(100, Math.round((timeLeft/DURATION_MS)*100)));
+
+      main.innerHTML = `
+        ${stats}
+        <div class="card qcard">
+          <div class="cat">${lang==="ja"?q.categoryJa:q.category}</div>
+          <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap">
+            <h2>${q.term}</h2>
+            <div class="timer" aria-label="timer">
+              <div style="width:${pct}%; background:${pct>40?'var(--ok)': pct>20?'var(--warn)':'var(--bad)'}"></div>
             </div>
           </div>
-          <p class="mt-4 text-neutral-700 text-base md:text-lg">${lang==='ja'?q.ja:q.en}</p>
-          <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
-            ${options.map((opt, i) => {
-              const isChosen = answered && answered.choice === opt;
-              const isCorrect = answered ? opt === q.term : false;
-              const base = "w-full text-left p-4 rounded-2xl border shadow focus:outline-none";
-              const style = !answered
-                ? "bg-white hover:bg-neutral-50 border-neutral-300"
-                : isCorrect
-                  ? "bg-emerald-50 border-emerald-400"
-                  : isChosen
-                    ? "bg-rose-50 border-rose-400"
-                    : "bg-white border-neutral-200 opacity-60";
-              return html`<button class="${base} ${style}" onClick=${() => onAnswer(opt)}>
-                <div class="flex items-center gap-3">
-                  <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-neutral-800 text-white text-sm font-semibold">${i + 1}</span>
-                  <span class="text-lg font-semibold">${opt}</span>
-                </div>
-              </button>`;
-            })}
+          <p style="margin-top:12px; color:#374151; font-size:16px">${lang==="ja"?q.ja:q.en}</p>
+          <div class="grid2" id="opts"></div>
+          <div class="row2">
+            <span id="feedback">${answered ? feedbackText(q) : (lang==="ja"?"1〜4で選択":"Choose with 1–4")}</span>
+            <button class="next" id="nextBtn">${lang==="ja"?"次へ":"Next"}</button>
           </div>
-          <div class="mt-6 flex items-center justify-between text-sm text-neutral-600">
-            ${answered
-              ? html`<div>
-                  ${answered.correct
-                    ? (lang==='ja' ? '正解！スペースで次へ' : 'Correct! Press Space for next.')
-                    : html`${lang==='ja'?'不正解：':'Incorrect:'} ${answered.choice} → ${lang==='ja'?'正解は':'Answer:'} ${q.term}`}
-                </div>`
-              : html`<span>${lang==='ja'?'1〜4で選択':'Choose with 1–4'}</span>`}
-            <button onClick=${onNext} class="px-3 py-2 rounded-2xl border border-neutral-300 bg-white shadow">
-              ${lang==='ja'?'次へ':'Next'}
-            </button>
+        </div>
+        ${progressStrip()}
+      `;
+
+      const optsEl = document.getElementById("opts");
+      options.forEach((opt, i)=>{
+        const b = document.createElement("button");
+        b.className = "btn";
+        b.innerHTML = `<div style="display:flex; align-items:center; gap:12px">
+          <span class="pill">${i+1}</span><span style="font-weight:700; font-size:16px">${opt}</span></div>`;
+        b.onclick = ()=>handleAnswer(opt);
+        if(answered){
+          const isCorrect = (opt===q.term);
+          const isChosen = answered.choice===opt;
+          if(isCorrect) b.classList.add("good");
+          else if(isChosen) b.classList.add("bad");
+          else b.classList.add("dim");
+        }
+        optsEl.appendChild(b);
+      });
+
+      document.getElementById("nextBtn").onclick = ()=>nextQuestion();
+    }
+
+    function progressStrip(){
+      const pct = Math.round((progress.seen.length/DATA.length)*100);
+      return `
+        <div style="margin-top:16px">
+          <div style="color:var(--muted); font-size:14px; margin-bottom:6px">
+            ${lang==="ja"?"学習進捗":"Learning Progress"} — ${progress.seen.length}/${DATA.length} (${pct}%), ${lang==="ja"?"要復習":"Review"}: ${progress.wrong.length}
           </div>
-        </div>`;
+          <div class="progress"><div style="width:${pct}%"></div></div>
+        </div>
+      `;
+    }
+
+    function feedbackText(q){
+      if(!answered) return "";
+      return answered.correct
+        ? (lang==="ja"?"正解！スペースで次へ":"Correct! Press Space for next.")
+        : (lang==="ja"?"不正解：":"Incorrect:") + " " + answered.choice + " → " + (lang==="ja"?"正解は":"Answer:") + " " + q.term;
+    }
+
+    function makeChoices(q, pool){
+      const others = pool.filter(x=>x.term!==q.term);
+      const picks = shuffle(others).slice(0,3).map(x=>x.term);
+      return shuffle([q.term, ...picks]);
+    }
+
+    // ---------- Game flow ----------
+    function startTimer(){
+      stopTimer();
+      timeLeft = DURATION_MS;
+      timerId = setInterval(()=>{
+        timeLeft = Math.max(0, timeLeft-100);
+        if(timeLeft===0 && !answered) handleAnswer("__timeout__");
+        render();
+      }, 100);
+    }
+    function stopTimer(){ if(timerId) { clearInterval(timerId); timerId = null; } }
+
+    function handleAnswer(choice){
+      if(answered) return;
+      const q = shuffled[idx];
+      const correct = (choice===q.term);
+      const timeMs = Math.max(1, DURATION_MS - timeLeft);
+      if(choice==="__timeout__"){ beep(160,0.06); }
+      else { correct ? beep(420,0.04) : beep(160,0.06); }
+
+      const speedScore = Math.ceil((DURATION_MS - timeMs)/250);
+      const delta = correct ? 10 + speedScore + (streak*2) : 0;
+
+      answered = { correct, choice, timeMs };
+      score += delta;
+      streak = correct ? (streak+1) : 0;
+      bestStreak = correct ? Math.max(bestStreak, streak) : bestStreak;
+      lives = correct ? lives : Math.max(0, lives-1);
+      progress.seen = Array.from(new Set([...progress.seen, q.term]));
+      if(!correct) progress.wrong = Array.from(new Set([...progress.wrong, q.term]));
+
+      localStorage.setItem("ttc.progress", JSON.stringify(progress));
+      localStorage.setItem("ttc.bestStreak", String(bestStreak));
+
+      stopTimer();
+      render();
+    }
+
+    function nextQuestion(){
+      if(idx+1 >= shuffled.length || lives===0){
+        restart(); return;
       }
+      answered = null;
+      idx++;
+      startMs = Date.now();
+      beep(620,0.03);
+      startTimer();
+      render();
+    }
 
-      // ---------- App ----------
-      function getUrlLang() {
-        const p = new URLSearchParams(location.search).get("lang");
-        return p === "ja" || p === "en" ? p : null;
-      }
+    function restart(){
+      answered = null;
+      shuffled = shuffle([...DATA]);
+      idx = 0; lives = 3; score = 0; streak = 0;
+      startMs = Date.now();
+      beep(620,0.03);
+      startTimer();
+      render();
+    }
 
-      function App() {
-        const [lang, setLang] = useState(() => {
-          const u = getUrlLang();
-          return u || localStorage.getItem("ttc.lang") || "en";
-        });
-        const [muted, setMuted] = useState(() => localStorage.getItem("ttc.muted") === "1");
-        useEffect(() => localStorage.setItem("ttc.lang", lang), [lang]);
-        useEffect(() => localStorage.setItem("ttc.muted", muted ? "1" : "0"), [muted]);
-
-        const [shuffled, setShuffled] = useState(() => shuffle([...DATA]));
-        const [idx, setIdx] = useState(0);
-        const [score, setScore] = useState(0);
-        const [streak, setStreak] = useState(0);
-        const [bestStreak, setBestStreak] = useState(() => parseInt(localStorage.getItem("ttc.bestStreak") || "0", 10));
-        const [lives, setLives] = useState(3);
-        const [answered, setAnswered] = useState(null);
-        const [startMs, setStartMs] = useState(Date.now());
-        const [progress, setProgress] = useState(() => {
-          try { return JSON.parse(localStorage.getItem("ttc.progress") || ""); }
-          catch { return { seen: [], wrong: [] }; }
-        });
-        useEffect(() => localStorage.setItem("ttc.progress", JSON.stringify(progress)), [progress]);
-        useEffect(() => localStorage.setItem("ttc.bestStreak", String(bestStreak)), [bestStreak]);
-
-        const DURATION_MS = 16000;
-        const [timeLeft, setTimeLeft] = useState(DURATION_MS);
-        useEffect(() => {
-          setTimeLeft(DURATION_MS);
-          const int = setInterval(() => setTimeLeft(t => Math.max(0, t - 100)), 100);
-          return () => clearInterval(int);
-        }, [idx]);
-        useEffect(() => { if (timeLeft === 0 && !answered) handleAnswer("__timeout__"); }, [timeLeft, answered]);
-
+    // ---------- Keyboard ----------
+    window.addEventListener("keydown",(e)=>{
+      if(e.key==="t" || e.key==="T"){ lang = (lang==="en"?"ja":"en"); localStorage.setItem("ttc.lang",lang); render(); }
+      if(e.key==="m" || e.key==="M"){ muted = !muted; localStorage.setItem("ttc.muted", muted?"1":"0"); renderTopBar(); }
+      if(e.key===" " && answered){ nextQuestion(); }
+      if(!answered && ["1","2","3","4"].includes(e.key)){
         const q = shuffled[idx];
-        const options = useMemo(() => {
-          const others = shuffled.filter(x => x.term !== q.term);
-          const picks = shuffle(others).slice(0, 3).map(x => x.term);
-          return shuffle([q.term, ...picks]);
-        }, [q, shuffled]);
-
-        const sndOk = useSound(420, 0.04);
-        const sndBad = useSound(160, 0.06);
-        const sndNext = useSound(620, 0.03);
-
-        function handleAnswer(choice) {
-          if (answered) return;
-          const timeMs = Math.max(1, DURATION_MS - timeLeft);
-          const correct = choice === q.term;
-          if (!muted) { (choice === "__timeout__") ? sndBad() : (correct ? sndOk() : sndBad()); }
-          const speedScore = Math.ceil((DURATION_MS - timeMs) / 250);
-          const delta = correct ? 10 + speedScore + streak * 2 : 0;
-          setAnswered({ correct, choice, timeMs });
-          setScore(s => s + delta);
-          setStreak(st => (correct ? st + 1 : 0));
-          setBestStreak(b => (correct ? Math.max(b, streak + 1) : b));
-          setLives(L => (correct ? L : Math.max(0, L - 1)));
-          setProgress(p => ({ seen: [...new Set([...p.seen, q.term])], wrong: correct ? p.wrong : [...new Set([...p.wrong, q.term])] }));
-        }
-        function nextQuestion() {
-          setAnswered(null);
-          if (idx + 1 >= shuffled.length || lives === 0) {
-            setShuffled(shuffle([...DATA]));
-            setIdx(0);
-            setLives(3);
-            setScore(0);
-            setStreak(0);
-            setStartMs(Date.now());
-            if (!muted) sndNext();
-            return;
-          }
-          setIdx(i => i + 1);
-          setStartMs(Date.now());
-          if (!muted) sndNext();
-        }
-
-        useEffect(() => {
-          const onKey = (e) => {
-            if (e.key === "t" || e.key === "T") setLang(l => (l === "en" ? "ja" : "en"));
-            if (e.key === "m" || e.key === "M") setMuted(m => !m);
-            if (e.key === " " && answered) nextQuestion();
-            if (!answered && ["1","2","3","4"].includes(e.key)) {
-              const idx = parseInt(e.key, 10) - 1;
-              handleAnswer(options[idx]);
-            }
-          };
-          window.addEventListener("keydown", onKey);
-          return () => window.removeEventListener("keydown", onKey);
-        }, [answered, options]);
-
-        const elapsed = Math.round((Date.now() - startMs) / 1000);
-
-        return html`<div class="min-h-screen bg-neutral-100 text-neutral-900 flex flex-col items-center p-4">
-          <header class="w-full max-w-4xl flex flex-col md:flex-row md:items-end md:justify-between gap-3 mt-4">
-            <div>
-              <h1 class="text-2xl md:text-3xl font-bold">Tintagel Terminology Challenge</h1>
-              <p class="text-sm text-neutral-600">Keyboard: [1–4]=answer • [Space]=next • [T]=toggle language • [M]=mute</p>
-            </div>
-            <div class="flex items-center gap-2">
-              ${html`<${Toggle} label="日本語 / EN" on=${lang==='ja'} setOn=${(v)=>setLang(v?'ja':'en')} />`}
-              ${html`<${Toggle} label=${muted?'Muted':'Sound'} on=${!muted} setOn=${(v)=>setMuted(!v)} />`}
-            </div>
-          </header>
-
-          <main class="w-full max-w-4xl mt-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-              ${html`<${Stat} label=${lang==='ja'?'スコア':'Score'} value=${score} />`}
-              ${html`<${Stat} label=${lang==='ja'?'連続正解':'Streak'} value=${streak + ' (best ' + bestStreak + ')'} />`}
-              ${html`<${Stat} label=${lang==='ja'?'残りライフ':'Lives'} value=${lives} />`}
-              ${html`<${Stat} label=${lang==='ja'?'経過時間':'Elapsed'} value=${elapsed+'s'} />`}
-            </div>
-
-            ${lives===0
-              ? html`<${GameOverPanel} lang=${lang} onRestart=${nextQuestion} progress=${progress} DATA=${DATA} />`
-              : html`<${QuestionCard} q=${q} lang=${lang} options=${options} timeLeft=${timeLeft} duration=${DURATION_MS} answered=${answered} onAnswer=${handleAnswer} onNext=${nextQuestion} />`
-            }
-
-            ${html`<${ProgressStrip} seen=${progress.seen.length} total=${DATA.length} wrong=${progress.wrong.length} lang=${lang} />`}
-          </main>
-
-          <footer class="mt-10 mb-6 text-xs text-neutral-500 text-center max-w-3xl">
-            <p>${lang==='ja'
-              ? '学習モード：短い問題、即時フィードバック、進捗の可視化。誤答は自動的に復習対象になります。'
-              : 'Learning mode: short questions, instant feedback, progress visualization. Missed items are automatically queued for review.'}</p>
-          </footer>
-        </div>`;
+        const options = makeChoices(q, shuffled);
+        handleAnswer(options[parseInt(e.key,10)-1]);
       }
+    });
+
+    // ---------- Boot ----------
+    renderTopBar();
+    startTimer();
+    render();
+  </script>
+</body>
+</html>
+
 
       render(html`<${App} />`, document.getElementById("root"));
     </script>
