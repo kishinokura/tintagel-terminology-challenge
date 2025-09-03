@@ -128,47 +128,53 @@
     };
 
     // ---------- Data ----------
-    const CATEGORY_JA = {
-      "Timing & Initiative":"タイミングと主導権","Awareness & Leverage":"感覚とテコの原理",
-      "Targets & Measure":"的と間合い・計測","Phases":"戦闘の段階",
-      "Vier Leger":"四つの構え","Meisterhäue":"名手の斬撃","Tactics":"戦術と基礎技術",
-    };
-    const t=(term,en,ja,category)=>({term,en,ja,category,categoryJa:CATEGORY_JA[category]||category});
-    const DATA = [
-      t("Vor","Taking the initiative so the foe must react.","先手を取り主導権を握る。相手を反応に追い込む。","Timing & Initiative"),
-      t("Indes","Acting in-the-instant; keep/regain initiative in the bind.","瞬間に行動し、バインド中の主導権を保つ/取り返す。","Timing & Initiative"),
-      t("Nach","Acting after; being in a reactive role.","相手の後で動く反応的な立場。","Timing & Initiative"),
-      t("Fühlen","Awareness in the fight (pressure, distance, stance, balance, grip, breath).","戦いの全体状況の感覚（剣圧・距離・姿勢・重心・握り・呼吸）。","Awareness & Leverage"),
-      t("Stark","Strong bind: contact nearer your hilt.","強いバインド：接触点が柄に近い。","Awareness & Leverage"),
-      t("Schwach","Weak bind: contact nearer your point.","弱いバインド：接触点が剣先に近い。","Awareness & Leverage"),
-      t("Vier Blößen","The four openings.","四つの開口部。","Targets & Measure"),
-      t("Länge","Distance / reach.","間合い・リーチ。","Targets & Measure"),
-      t("Maße","Proper measure / proportion (time & space).","正しい計測（間と時）。","Targets & Measure"),
-      t("Zufechten","Onset: closing in & first attack.","攻撃開始の接近段階と最初の攻撃。","Phases"),
-      t("Krieg","War: middle phase where blades bind & techniques flow.","主戦局面：バインド内で技が競り合う段階。","Phases"),
-      t("Abzug","Withdrawal: safe exit & disengage.","離脱：攻防後に安全に下がる。","Phases"),
-      t("Vom Tag","High roof guard; strike down.","上段構え。斬り下ろす。","Vier Leger"),
-      t("Ochs","High thrusting guard with point forward.","高い突き構え（剣先を相手へ）。","Vier Leger"),
-      t("Pflug","Low thrusting guard with point forward.","低い突き構え（剣先を相手へ）。","Vier Leger"),
-      t("Alber","Low 'fool' guard; invitation.","低い誘いの構え。","Vier Leger"),
-      t("Zornhau","Wrath-cut: break basic strikes while threatening to hit or thrust.","怒りの斬り：相手の基本打を破りつつ打突を脅かす。","Meisterhäue"),
-      t("Krumphau","Crooked-cut; breaks Ochs.","曲線の斬り。オックスを破る。","Meisterhäue"),
-      t("Zwerchhau","Thwart-cut; breaks Vom Tag.","横の斬り。フォムタークを破る。","Meisterhäue"),
-      t("Schielhau","Squinting-cut; breaks Pflug.","目くらましの斬り。フルークを破る。","Meisterhäue"),
-      t("Scheitelhau","Parting-cut downward on the crown; breaks Alber.","頭頂へ割り込む斬り。","Meisterhäue"),
-      t("Abschneiden","Slicing off at the hands/arms.","手や腕を切り落とす。","Tactics"),
-      t("Absetzen","Setting-aside thrust.","攻撃を逸らしながら突く。","Tactics"),
-      t("Durchlaufen","Running through; body displacement.","駆け抜ける（体さばき）。","Tactics"),
-      t("Durchwechseln","Change-through under the blade.","剣線下の切り替え。","Tactics"),
-      t("Hände Drücken","Pressing the hands in close play.","至近距離で相手の手を押し込む。","Tactics"),
-      t("Hängen","Hanging guard/hold.","吊り構え。","Tactics"),
-      t("Nachreisen","Travel-after pursuing strike.","追い討ち・追撃。","Tactics"),
-      t("Schnappen","Snapping: return attack using opponent's power.","相手の力を利用して返す打ち。","Tactics"),
-      t("Überlaufen","Over-running above the blade to out-reach.","上から制圧して射程を超える。","Tactics"),
-      t("Versetzen","Displacing: shift the blade off-line.","剣線をずらす。","Tactics"),
-      t("Winden","Eight windings into Ochs/Pflug; leverage in the bind.","8種の巻き（高位オックス4・低位フルーク4）。","Tactics"),
-      t("Zucken","Twitching; sudden pull-snap.","引き抜き。素早いスナップ。","Tactics"),
-    ];
+const CATEGORY_JA = {
+  "Timing & Initiative":"タイミングと主導権","Awareness & Leverage":"感覚とテコの原理",
+  "Targets & Measure":"的と間合い・計測","Phases":"戦闘の段階",
+  "Vier Leger":"四つの構え","Meisterhäue":"名手の斬撃","Tactics":"戦術と基礎技術",
+};
+const t=(term,en,ja,category)=>({term,en,ja,category,categoryJa:CATEGORY_JA[category]||category});
+const DATA = [
+  t("Vor","Taking the initiative so the foe must react.","先手を取り主導権を握り、相手を反応に追い込む。","Timing & Initiative"),
+  t("Indes","Acting in-the-instant; keep/regain initiative in the bind.","瞬間に行動し、バインド中の主導権を保つ・取り返す。","Timing & Initiative"),
+  t("Nach","Acting after; being in a reactive role.","相手の後で動く受け身の立場。","Timing & Initiative"),
+
+  t("Fühlen","Awareness in the fight (pressure, distance, stance, balance, grip, breath).","戦いの感覚（剣圧・距離・姿勢・重心・握り・呼吸）。","Awareness & Leverage"),
+  t("Stark","Strong bind: contact nearer your hilt.","強いバインド：接触点が柄に近い。","Awareness & Leverage"),
+  t("Schwach","Weak bind: contact nearer your point.","弱いバインド：接触点が剣先に近い。","Awareness & Leverage"),
+
+  t("Vier Blößen","The four openings.","四つの開口部。","Targets & Measure"),
+  t("Länge","Distance / reach.","間合い・リーチ。","Targets & Measure"),
+  t("Maße","Proper measure / proportion (time & space).","正しい間合い・時機の計測。","Targets & Measure"),
+
+  t("Zufechten","Onset: closing in & first attack.","接近して攻撃を始める段階。","Phases"),
+  t("Krieg","War: middle phase where blades bind & techniques flow.","主戦局面：バインド内で技が競り合う段階。","Phases"),
+  t("Abzug","Withdrawal: safe exit & disengage.","離脱：攻防後に安全に下がる。","Phases"),
+
+  t("Vom Tag","High roof guard; strike down.","上段構え。斬り下ろす。","Vier Leger"),
+  t("Ochs","High thrusting guard with point forward.","高い突き構え（剣先を相手へ向ける）。","Vier Leger"),
+  t("Pflug","Low thrusting guard with point forward.","低い突き構え（剣先を相手へ向ける）。","Vier Leger"),
+  t("Alber","Low 'fool' guard; invitation.","低い誘いの構え。","Vier Leger"),
+
+  t("Zornhau","Wrath-cut: break basic strikes while threatening to hit or thrust.","怒りの斬り：相手の基本打を破りつつ打突を脅かす。","Meisterhäue"),
+  t("Krumphau","Crooked-cut; breaks Ochs.","曲線の斬り。オックスを破る。","Meisterhäue"),
+  t("Zwerchhau","Thwart-cut; breaks Vom Tag (as a Versetzen).","横の斬り。フォムタークを崩す（Versetzenとして）。","Meisterhäue"),
+  t("Schielhau","Squinting-cut; breaks Pflug (as a Versetzen).","目くらましの斬り。フルークを崩す（Versetzenとして）。","Meisterhäue"),
+  t("Scheitelhau","Parting-cut downward on the crown; breaks Alber (as a Versetzen).","頭頂を割り込む斬り。アルバーを崩す（Versetzenとして）。","Meisterhäue"),
+
+  t("Abschneiden","Slicing off at the hands/arms.","手や腕を切り落とす。","Tactics"),
+  t("Absetzen","Setting-aside thrust.","突きを逸らして突き返す。","Tactics"),
+  t("Durchlaufen","Running through; body displacement.","駆け抜ける体さばき。","Tactics"),
+  t("Durchwechseln","Change-through under the blade.","剣線下の切り替え。","Tactics"),
+  t("Hände Drücken","Pressing the hands in close play.","至近距離で相手の手を押さえ込む。","Tactics"),
+  t("Hängen","Hanging guard/hold.","吊り構え。","Tactics"),
+  t("Nachreisen","Travel-after pursuing strike.","追い討ち・追撃。","Tactics"),
+  t("Schnappen","Snapping: return attack using opponent's power.","相手の力を利用して打ち返す。","Tactics"),
+  t("Überlaufen","Over-running above the blade to out-reach.","上から制圧して射程を超える。","Tactics"),
+  t("Versetzen","Displacing: shift the blade off-line (usually against an attack from a guard).","剣線をずらす（通常は構えから来る攻撃に対して）。","Tactics"),
+  t("Winden","Eight windings into Ochs/Pflug; leverage in the bind.","8種の巻き（高位オックス4・低位フルーク4）。","Tactics"),
+  t("Zucken","Twitching; sudden pull-snap.","引き抜き。素早いスナップ。","Tactics"),
+];
 
     // ---------- State ----------
     const url = new URL(location.href);
