@@ -42,7 +42,7 @@
     .grid2{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px}
     @media(min-width:768px){.grid2{grid-template-columns:1fr 1fr}}
 
-    /* Button: make ENTIRE surface clickable and reliably interactive */
+    /* Button: entire surface clickable */
     .btn{
       display:flex;
       align-items:center;
@@ -60,7 +60,6 @@
       user-select:none;
       position:relative;
     }
-    /* Guarantee clicks anywhere inside register on the button */
     .btn *{ pointer-events:none }
     .btn:hover{background:#fafafa}
     .btn.bad{border-color:#fb7185;background:#fff1f2}
@@ -198,7 +197,7 @@
     let runStartMs = Date.now();
     let progress = safeGet("ttc.progress") || { seen:[], wrong:[] };
 
-    // New run metrics
+    // Run metrics
     let totalAnswered = 0;
     let totalCorrect  = 0;
     let totalWrong    = 0;
@@ -254,19 +253,25 @@
       o.start(now); o.stop(now+dur);
       updateAudioStatus();
     }
-    // Victory fanfare (simple major arpeggio)
+    // Victory fanfare
     function playVictory(){
       beep(784,0.18,"sine",0.25,0.00);  // G5
       beep(988,0.18,"sine",0.25,0.20);  // B5
       beep(1176,0.22,"sine",0.25,0.38); // D6
-      beep(1568,0.30,"triangle",0.28,0.62); // G6 sustain
+      beep(1568,0.30,"triangle",0.28,0.62); // G6
     }
-    // Funeral motif (descending minor)
+    // Perfect fanfare (extended)
+    function playPerfect(){
+      playVictory();
+      beep(2093,0.22,"sine",0.28,0.95); // C7
+      beep(2349,0.24,"triangle",0.30,1.20); // D7
+    }
+    // Funeral motif (unchanged)
     function playFuneral(){
-      beep(220,0.35,"sine",0.22,0.00);  // A3
-      beep(196,0.35,"sine",0.22,0.38);  // G3
-      beep(174.6,0.45,"sine",0.22,0.72); // F3
-      beep(130.8,0.60,"triangle",0.26,1.12); // C3
+      beep(220,0.35,"sine",0.22,0.00);
+      beep(196,0.35,"sine",0.22,0.38);
+      beep(174.6,0.45,"sine",0.22,0.72);
+      beep(130.8,0.60,"triangle",0.26,1.12);
     }
 
     window.addEventListener("pointerdown", enableAudio, { once:false });
@@ -315,7 +320,7 @@
         </div>`;
 
       if(lives===0){
-        showFinalReport(false); // third mistake → final
+        showFinalReport("fail"); // keep funeral + review behavior
         return;
       }
 
@@ -350,7 +355,6 @@
         b.innerHTML = `
           <span class="pill">${i+1}</span>
           <span style="font-weight:700; font-size:16px">${labelFor(opt)}</span>`;
-        // Entire surface clickable
         b.addEventListener("click",()=>handleAnswer(opt));
         b.addEventListener("keydown",(ev)=>{ if(ev.key==="Enter"||ev.key===" "){ ev.preventDefault(); handleAnswer(opt);} });
         if(answered){
@@ -380,7 +384,7 @@
     }
 
     // ---------- Final report ----------
-    function showFinalReport(victory){
+    function showFinalReport(mode){
       stopTimer();
 
       const runMs = Date.now() - runStartMs;
@@ -394,14 +398,22 @@
           <div style="color:var(--muted); font-size:13px">${lang==="ja"?m.ja:m.en}</div>
         </li>`).join("");
 
-      // Sounds
-      if(victory){ playVictory(); }
-      else { playFuneral(); }
+      if(mode==="fail"){ playFuneral(); }
+      else if(mode==="perfect"){ playPerfect(); }
+      else { playVictory(); }
 
-      const title = victory ? (lang==="ja"?"コンプリート！":"All Questions Complete!") : (lang==="ja"?"ゲーム終了":"Game Over");
-      const subtitle = victory
-        ? (lang==="ja"?"お疲れさま。全問回答を完了。":"Well done — you completed all questions.")
-        : (lang==="ja"?"3回ミスで終了。復習して再挑戦。":"Three mistakes reached. Review and try again.");
+      const titles = {
+        perfect: lang==="ja" ? "パーフェクト！" : "Perfect!",
+        victory: lang==="ja" ? "コンプリート！" : "All Questions Complete!",
+        fail:    lang==="ja" ? "ゲーム終了" : "Game Over"
+      };
+      const subtitles = {
+        perfect: lang==="ja" ? "全問正解。見事。" : "Flawless run. Every answer correct.",
+        victory: lang==="ja" ? "お疲れさま。全問回答を完了。" : "Well done — you completed all questions.",
+        fail:    lang==="ja" ? "3回ミスで終了。復習して再挑戦。" : "Three mistakes reached. Review and try again."
+      };
+      const title = titles[mode];
+      const subtitle = subtitles[mode];
 
       const summaryGrid = `
         <div class="row" style="margin-top:12px">
@@ -411,7 +423,7 @@
           <div class="stat"><div class="stat-label">${lang==="ja"?"所要時間":"Time"}</div><div class="stat-value">${secs}s</div></div>
         </div>`;
 
-      const reviewBlock = missedTerms.length
+      const reviewBlock = mode==="fail" || missedTerms.length
         ? `<h3 style="margin:12px 0 8px 0; font-size:18px">${lang==="ja"?"要復習":"Items to Review"}</h3>
            <ul style="display:grid; gap:8px; grid-template-columns:1fr 1fr; margin-top:8px; padding-left:0; list-style:none;">${missList}</ul>`
         : `<p style="color:var(--muted); margin-top:12px;">${lang==="ja"?"素晴らしい！復習項目はありません。":"Excellent—no review items."}</p>`;
@@ -469,7 +481,6 @@
       const correct=(choice===q.term);
       const timeMs=Math.max(1,DURATION_MS-timeLeft);
 
-      // Per-answer sounds
       if(choice==="__timeout__"){ beep(220,0.18); } else { correct ? beep(520,0.16) : beep(260,0.18); }
 
       const speedScore=Math.ceil((DURATION_MS-timeMs)/250);
@@ -491,18 +502,21 @@
         localStorage.setItem("ttc.progress", JSON.stringify(progress));
         localStorage.setItem("ttc.bestStreak", String(bestStreak));
       }catch{}
-      stopTimer(); render();
-    }
-    function nextQuestion(){
-      // If finished last question, show final report with victory sound
-      if(idx+1>=shuffled.length){
-        answered=null;
-        showFinalReport(true);
+      stopTimer();
+
+      // Finish immediately on last question (victory/perfect), preserving fail path separately.
+      if(lives>0 && idx===shuffled.length-1){
+        const mode = (totalWrong===0) ? "perfect" : "victory";
+        showFinalReport(mode);
         return;
       }
+
+      render();
+    }
+    function nextQuestion(){
       if(lives===0){
         answered=null;
-        showFinalReport(false);
+        showFinalReport("fail");
         return;
       }
       answered=null; idx++; startMs=Date.now(); beep(740,0.12); beginQuestion();
